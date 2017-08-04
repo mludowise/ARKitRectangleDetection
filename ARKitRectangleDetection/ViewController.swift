@@ -38,7 +38,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
     }
     
-    var displaySurfaces = false {
+    var displaySurfaces = true {
         didSet {
             if displaySurfaces == false {
                 for surface in surfaces.values {
@@ -126,7 +126,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                             return
                     }
                     
-                    print("\(results.count) results")
+                    print("\(results.count) rectangles found")
                     
                     // Remove old bounding boxes
                     for view in self.foundRectangleViews.values {
@@ -259,6 +259,23 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
             self.sceneView.layer.addSublayer(layer)
             self.outlineLayers[result.uuid] = layer
         }
+        
+        // Convert to 3D coordinates
+        let convertedBoundingBox = convertRectFromCamera(result.boundingBox, to: sceneView)
+        let midPoint = CGPoint(x: convertedBoundingBox.midX, y: convertedBoundingBox.midY)
+        let hitTestResults = sceneView.hitTest(midPoint, types: [.existingPlaneUsingExtent, .featurePoint])
+        
+        // Sort by nearest plane
+        guard let hitResult = hitTestResults.sorted(by: { (result1, result2) -> Bool in
+            result1.distance < result2.distance
+        }).first else {
+            print("No anchor for this rectangle")
+            return
+        }
+        
+        print("\(hitTestResults.count) anchors found")
+        
+//        let anchor = hitResult.anchor
         
 //        guard let rectangleNode = RectangleNode(sceneView: self.sceneView, rectangle: result) else {
 //            print("No rectangle on plane")
