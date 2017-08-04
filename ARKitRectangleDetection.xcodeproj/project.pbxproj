@@ -7,15 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A04A97D91F34547100D93A39 /* SCNVector3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */; };
 		A0E91F481F341E3800B511F8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F471F341E3800B511F8 /* AppDelegate.swift */; };
 		A0E91F4C1F341E3800B511F8 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F4B1F341E3800B511F8 /* ViewController.swift */; };
 		A0E91F4F1F341E3800B511F8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A0E91F4D1F341E3800B511F8 /* Main.storyboard */; };
 		A0E91F511F341E3800B511F8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0E91F501F341E3800B511F8 /* Assets.xcassets */; };
 		A0E91F541F341E3800B511F8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A0E91F521F341E3800B511F8 /* LaunchScreen.storyboard */; };
-		A0E91F5D1F341EFA00B511F8 /* Plane.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F5C1F341EFA00B511F8 /* Plane.swift */; };
+		A0E91F5D1F341EFA00B511F8 /* SurfaceNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F5C1F341EFA00B511F8 /* SurfaceNode.swift */; };
+		A0E91F5F1F34256700B511F8 /* Collection+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F5E1F34256700B511F8 /* Collection+Extensions.swift */; };
+		A0E91F611F342F9000B511F8 /* RectangleNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F601F342F9000B511F8 /* RectangleNode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extensions.swift"; sourceTree = "<group>"; };
 		A0E91F441F341E3800B511F8 /* ARKitRectangleDetection.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ARKitRectangleDetection.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0E91F471F341E3800B511F8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A0E91F4B1F341E3800B511F8 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -23,7 +27,9 @@
 		A0E91F501F341E3800B511F8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A0E91F531F341E3800B511F8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A0E91F551F341E3800B511F8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A0E91F5C1F341EFA00B511F8 /* Plane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plane.swift; sourceTree = "<group>"; };
+		A0E91F5C1F341EFA00B511F8 /* SurfaceNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceNode.swift; sourceTree = "<group>"; };
+		A0E91F5E1F34256700B511F8 /* Collection+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Collection+Extensions.swift"; sourceTree = "<group>"; };
+		A0E91F601F342F9000B511F8 /* RectangleNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleNode.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,7 +64,10 @@
 			children = (
 				A0E91F471F341E3800B511F8 /* AppDelegate.swift */,
 				A0E91F4B1F341E3800B511F8 /* ViewController.swift */,
-				A0E91F5C1F341EFA00B511F8 /* Plane.swift */,
+				A0E91F5C1F341EFA00B511F8 /* SurfaceNode.swift */,
+				A0E91F601F342F9000B511F8 /* RectangleNode.swift */,
+				A0E91F5E1F34256700B511F8 /* Collection+Extensions.swift */,
+				A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */,
 				A0E91F4D1F341E3800B511F8 /* Main.storyboard */,
 				A0E91F501F341E3800B511F8 /* Assets.xcassets */,
 				A0E91F521F341E3800B511F8 /* LaunchScreen.storyboard */,
@@ -139,7 +148,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				A0E91F4C1F341E3800B511F8 /* ViewController.swift in Sources */,
-				A0E91F5D1F341EFA00B511F8 /* Plane.swift in Sources */,
+				A04A97D91F34547100D93A39 /* SCNVector3+Extensions.swift in Sources */,
+				A0E91F5F1F34256700B511F8 /* Collection+Extensions.swift in Sources */,
+				A0E91F611F342F9000B511F8 /* RectangleNode.swift in Sources */,
+				A0E91F5D1F341EFA00B511F8 /* SurfaceNode.swift in Sources */,
 				A0E91F481F341E3800B511F8 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

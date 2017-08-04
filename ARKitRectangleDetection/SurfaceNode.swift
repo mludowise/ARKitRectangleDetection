@@ -1,6 +1,6 @@
 //
-//  Plane.swift
-//  ARKitSurfaces
+//  SurfaceNode.swift
+//  ARKitRectangleDetection
 //
 //  Created by Melissa Ludowise on 8/3/17.
 //  Copyright © 2017 Mel Ludowise. All rights reserved.
@@ -8,10 +8,10 @@
 
 import ARKit
 
-class Plane: SCNNode {
+class SurfaceNode: SCNNode {
     
-    private var anchor: ARPlaneAnchor
-    private var planeGeometry: SCNPlane
+    private(set) var anchor: ARPlaneAnchor
+    private(set) var planeGeometry: SCNPlane
     
     init(anchor: ARPlaneAnchor) {
         
