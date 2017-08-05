@@ -17,7 +17,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     // Only used if showFoundRectangles is true
     // UIViews used to draw bounding boxes of found rectangles with keys for rectangleObservation.uuid
-    private var foundRectangleOutlineViews = [UUID:UIView]()
+    private var foundRectangleOutlineLayers = [UUID:CAShapeLayer]()
     
     // Only used if showSelectedRectangleOutline is true
     // Displayed rectangle outline
@@ -35,14 +35,14 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     // MARK: - Debug properties
     
-    // Displays all rectangles found in an image in a blue square
+    // Displays all rectangles found in a blue outline
     var showFoundRectangles = true {
         didSet {
             if showFoundRectangles == false {
-                for view in foundRectangleOutlineViews.values {
-                    view.removeFromSuperview()
+                for layer in foundRectangleOutlineLayers.values {
+                    layer.removeFromSuperlayer()
                 }
-                foundRectangleOutlineViews.removeAll()
+                foundRectangleOutlineLayers.removeAll()
             }
         }
     }
@@ -172,36 +172,27 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     }
                     
                     print("\(results.count) rectangles found")
-                    
+
                     // Remove old bounding boxes
-                    for view in self.foundRectangleOutlineViews.values {
-                        view.removeFromSuperview()
+                    for layer in self.foundRectangleOutlineLayers.values {
+                        layer.removeFromSuperlayer()
                     }
-                    self.foundRectangleOutlineViews.removeAll()
+                    self.foundRectangleOutlineLayers.removeAll()
                     
                     if self.showFoundRectangles {
                         // Display bounding boxes
                         for result in results {
-                            let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
-                            let view = UIView(frame: convertedRect)
-                            view.layer.borderColor = UIColor.blue.cgColor
-                            view.layer.borderWidth = 4
-                            view.backgroundColor = .clear
-                            
-                            self.foundRectangleOutlineViews[result.uuid] = view
-                            self.sceneView.addSubview(view)
+                            let points = [result.topLeft, result.topRight, result.bottomRight, result.bottomLeft]
+                            let convertedPoints = points.map { self.sceneView.convertFromCamera($0) }
+                            let layer = self.drawPolygon(convertedPoints, color: UIColor.blue)
+                            self.foundRectangleOutlineLayers[result.uuid] = layer
+                            self.sceneView.layer.addSublayer(layer)
                         }
                     }
                     
-                    // Retrieve the result with the highest confidence that overlaps with touchpoint
                     guard let result = results.filter({ (result) -> Bool in
                         let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
                         return convertedRect.contains(touchLocation)
-                    }).sorted(by: { (result1, result2) -> Bool in
-//                        let box1 = result1.boundingBox
-//                        let box2 = result2.boundingBox
-//                        return box1.width * box1.height < box2.width * box2.height
-                        return result1.confidence >= result2.confidence
                     }).first else {
                         return
                     }
@@ -209,8 +200,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     self.handleRectangleObservation(result)
                 }
             })
-            request.maximumObservations = 10
-//            request.minimumConfidence = 0.3
+            request.maximumObservations = 0
             let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
             try? handler.perform([request])
         }
@@ -299,7 +289,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Outline the rectangle
         if showSelectedRectangleOutline {
-            selectedRectangleOutlineLayer = drawPolygon(convertedPoints)
+            selectedRectangleOutlineLayer = drawPolygon(convertedPoints, color: UIColor.red)
             sceneView.layer.addSublayer(selectedRectangleOutlineLayer!)
         }
         
@@ -314,10 +304,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         sceneView.scene.rootNode.addChildNode(rectangleNode)
     }
         
-    private func drawPolygon(_ points: [CGPoint]) -> CAShapeLayer {
+    private func drawPolygon(_ points: [CGPoint], color: UIColor) -> CAShapeLayer {
         let layer = CAShapeLayer()
         layer.fillColor = nil
-        layer.strokeColor = UIColor.red.cgColor
+        layer.strokeColor = color.cgColor
         layer.lineWidth = 2
         let path = UIBezierPath()
         path.move(to: points.last!)
@@ -328,4 +318,3 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         return layer
     }
 }
-
