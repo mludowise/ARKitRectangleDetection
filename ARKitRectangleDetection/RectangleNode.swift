@@ -40,16 +40,11 @@ class RectangleNode: SCNNode {
         self.anchor = cornersAndAnchor.anchor
         super.init()
         
-        // We add the new node to ourself since we inherited from SCNNode
-        let node = createNode()
-        self.addChildNode(node)
-    }
-    
-    private func createNode() -> SCNNode {
         // Find width, height, & center from corners
         let width = findWidth()
         let height = findHeight()
         let center = findCenter()
+        let angle = getYRotation()
         
         // Debug
         print("center: \(center) width: \(width) (\(width * meters2inches)\") height: \(height) (\(height * meters2inches)\")")
@@ -63,12 +58,18 @@ class RectangleNode: SCNNode {
 
         // Planes in SceneKit are vertical by default so we need to rotate
         // 90 degrees to match planes in ARKit
-//        rectNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1.0, 0.0, 0.0)
-
-        // Rotate to align corners
-        // TODO
-
-        return rectNode
+        var transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1.0, 0.0, 0.0)
+        
+        // Set rotation to the corner of the rectangle
+        transform = SCNMatrix4Rotate(transform, angle, 0, 1, 0)
+        
+        rectNode.transform = transform
+        
+        // We add the new node to ourself since we inherited from SCNNode
+        self.addChildNode(rectNode)
+        
+        // Set position to the center of rectangle
+        self.position = center
     }
 
 //    private func transform(hitResult: ARHitTestResult) -> SCNVector3 {
@@ -116,6 +117,17 @@ class RectangleNode: SCNNode {
              .bottomRight(let a, let b, let c):
             
             return getAngle(point: a, point: b, vertex: c)
+        }
+    }
+    
+    private func getYRotation() -> Float {
+        switch corners {
+        case .topLeft(let l, let r, _):
+            let distX = r.x - l.x
+            let distZ = r.z - l.z
+            return -atan(distZ / distX)
+        default:
+            return 0
         }
     }
     
