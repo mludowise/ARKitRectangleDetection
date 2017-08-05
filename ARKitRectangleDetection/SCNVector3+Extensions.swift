@@ -14,7 +14,7 @@ extension SCNVector3 {
         let deltaY = self.y - vector.y
         let deltaZ = self.z - vector.z
         
-        return CGFloat(sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ + deltaZ))
+        return CGFloat(sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ))
     }
     
     func midpoint(from vector: SCNVector3) -> SCNVector3 {
@@ -22,5 +22,10 @@ extension SCNVector3 {
         let midY = (self.y + vector.y) / 2
         let midZ = (self.z + vector.z) / 2
         return SCNVector3Make(midX, midY, midZ)
+    }
+    
+    // from Apples demo APP
+    static func positionFromTransform(_ transform: matrix_float4x4) -> SCNVector3 {
+        return SCNVector3Make(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
     }
 }

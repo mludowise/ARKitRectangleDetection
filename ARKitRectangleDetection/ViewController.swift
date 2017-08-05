@@ -60,6 +60,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // Last rectangle observed
     private var lastObservation: VNRectangleObservation?
     
+    // Dictionary of VNRectangleObservation UUIDs to drawn rectangle nodes
+    private var rectangleNodes = [UUID:RectangleNode]()
+    
     
     // MARK: - UIViewController
     
@@ -74,7 +77,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        self.sceneView.autoenablesDefaultLighting = true
+        sceneView.autoenablesDefaultLighting = true
         sceneView.debugOptions = [ARSCNDebugOptions.showWorldOrigin, ARSCNDebugOptions.showFeaturePoints]
 
         // Create a new scene
@@ -137,7 +140,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     if self.displayFoundRectangles {
                         // Display bounding boxes
                         for result in results {
-                            let convertedRect = self.convertRectFromCamera(result.boundingBox, to: self.sceneView)
+                            let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
                             let view = UIView(frame: convertedRect)
                             view.layer.borderColor = UIColor.blue.cgColor
                             view.layer.borderWidth = 4
@@ -150,7 +153,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     
                     // Retrieve the result with the highest confidence that overlaps with touchpoint
                     guard let result = results.filter({ (result) -> Bool in
-                        let convertedRect = self.convertRectFromCamera(result.boundingBox, to: self.sceneView)
+                        let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
                         return convertedRect.contains(touchLocation)
                     }).sorted(by: { (result1, result2) -> Bool in
 //                        let box1 = result1.boundingBox
@@ -239,98 +242,62 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // MARK: - Helper Methods
     
     private func handleRectangleObservation(_ result: VNRectangleObservation) {
-        // Remove old outline
-        if let lastObservation = self.lastObservation,
-            let layer = self.outlineLayers[lastObservation.uuid] {
-            self.outlineLayers.removeValue(forKey: lastObservation.uuid)
+        // Remove old outline & 3d rect
+        if let lastObservation = lastObservation,
+            let layer = outlineLayers[lastObservation.uuid] {
+            outlineLayers.removeValue(forKey: lastObservation.uuid)
+            rectangleNodes.removeValue(forKey: lastObservation.uuid)
             layer.removeFromSuperlayer()
         }
         
-        self.lastObservation = result
+        lastObservation = result
         
         // Convert points to view
         // VNObservation coordinates are in camera coordinates, which depend on the phone's orientation
         let points = [result.topLeft, result.topRight, result.bottomRight, result.bottomLeft]
-        let convertedPoints = points.map { self.convertPointFromCamera($0, to: self.sceneView) }
+        let convertedPoints = points.map { sceneView.convertFromCamera($0) }
         
         // Outline the rectangle
         if displayRectangleOutline {
-            let layer = self.drawPolygon(convertedPoints)
-            self.sceneView.layer.addSublayer(layer)
-            self.outlineLayers[result.uuid] = layer
+            let layer = drawPolygon(convertedPoints)
+            sceneView.layer.addSublayer(layer)
+            outlineLayers[result.uuid] = layer
         }
         
         // Convert to 3D coordinates
-        let convertedBoundingBox = convertRectFromCamera(result.boundingBox, to: sceneView)
+        let convertedBoundingBox = sceneView.convertFromCamera(result.boundingBox)
         let midPoint = CGPoint(x: convertedBoundingBox.midX, y: convertedBoundingBox.midY)
         let hitTestResults = sceneView.hitTest(midPoint, types: [.existingPlaneUsingExtent, .featurePoint])
         
-        // Sort by nearest plane
-        guard let hitResult = hitTestResults.sorted(by: { (result1, result2) -> Bool in
-            result1.distance < result2.distance
-        }).first else {
+        // Get closest result
+        guard let hitResult = hitTestResults.closest else {
             print("No anchor for this rectangle")
             return
         }
         
         print("\(hitTestResults.count) anchors found")
         
-//        let anchor = hitResult.anchor
+        // TODO: Perform a hit test on all 4 corners
+        // Corners enum should contain all 4 points with 1 optional
+        // Find intersections for each set of corner combinations and use closest set of combined
+        // Keep set of RectangleObservation.uuid : RectangleNode so 3D object can be removed when resetting
         
-//        guard let rectangleNode = RectangleNode(sceneView: self.sceneView, rectangle: result) else {
-//            print("No rectangle on plane")
+        // Convert to plane anchor
+//        guard let anchor = hitResult.anchor as? ARPlaneAnchor else {
 //            return
 //        }
-//        
-//        self.sceneView.scene.rootNode.addChildNode(rectangleNode)
-    }
-    
-    // Converts a point from camera coordinates (0 to 1 or -1 to 0, depending on orientation)
-    // into a point within the given view
-    private func convertPointFromCamera(_ point: CGPoint, to view: SCNView) -> CGPoint {
-        let orientation = UIApplication.shared.statusBarOrientation
-        switch orientation {
-        case .portrait, .unknown:
-            return CGPoint(x: point.y * view.frame.width, y: point.x * view.frame.height)
-        case .landscapeLeft:
-            return CGPoint(x: (1 - point.x) * view.frame.width, y: point.y * view.frame.height)
-        case .landscapeRight:
-            return CGPoint(x: point.x * view.frame.width, y: (1 - point.y) * view.frame.height)
-        case .portraitUpsideDown:
-            return CGPoint(x: (1 - point.y) * view.frame.width, y: (1 - point.x) * view.frame.height)
-        }
-    }
-    
-    private func convertRectFromCamera(_ rect: CGRect, to view: SCNView) -> CGRect {
-        let orientation = UIApplication.shared.statusBarOrientation
-        let x, y, w, h: CGFloat
         
-        switch orientation {
-        case .portrait, .unknown:
-            w = rect.height
-            h = rect.width
-            x = rect.origin.y
-            y = rect.origin.x
-        case .landscapeLeft:
-            w = rect.width
-            h = rect.height
-            x = 1 - rect.origin.x - w
-            y = rect.origin.y
-        case .landscapeRight:
-            w = rect.width
-            h = rect.height
-            x = rect.origin.x
-            y = 1 - rect.origin.y - h
-        case .portraitUpsideDown:
-            w = rect.height
-            h = rect.width
-            x = 1 - rect.origin.y - w
-            y = 1 - rect.origin.x - h
+//        let node = sceneView.node(for: anchor)
+//        let vector = SCNVector3.positionFromTransform(hitResult.worldTransform)
+        
+        guard let rectangleNode = RectangleNode(sceneView: sceneView, rectangle: result) else {
+            print("No rectangle on plane")
+            return
         }
         
-        return CGRect(x: x * view.frame.width, y: y * view.frame.height, width: w * view.frame.width, height: h * view.frame.height)
+        sceneView.scene.rootNode.addChildNode(rectangleNode)
     }
-    
+        
     private func drawPolygon(_ points: [CGPoint]) -> CAShapeLayer {
         let layer = CAShapeLayer()
         layer.fillColor = nil

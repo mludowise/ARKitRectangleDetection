@@ -11,58 +11,33 @@ import SceneKit
 import ARKit
 import Vision
 
-enum RectangleCorners {
-    case topLeft(topLeft: SCNVector3, topRight: SCNVector3, bottomLeft: SCNVector3)
-    case topRight(topLeft: SCNVector3, topRight: SCNVector3, bottomRight: SCNVector3)
-    case bottomLeft(topLeft: SCNVector3, bottomLeft: SCNVector3, bottomRight: SCNVector3)
-    case bottomRight(topRight: SCNVector3, bottomLeft: SCNVector3, bottomRight: SCNVector3)
-}
+private let meters2inches = CGFloat(39.3701)
 
 class RectangleNode: SCNNode {
+    static let hitTestTypes: ARHitTestResult.ResultType = [.existingPlaneUsingExtent]
+    static let hitResultAnchorComparator: (ARHitTestResult, ARHitTestResult) -> Bool = { (hit1, hit2) in
+        hit1.anchor?.identifier == hit2.anchor?.identifier
+    }
     
-    private var surfaceNode: SurfaceNode
+    enum RectangleCorners {
+        case topLeft(topLeft: SCNVector3, topRight: SCNVector3, bottomLeft: SCNVector3)
+        case topRight(topLeft: SCNVector3, topRight: SCNVector3, bottomRight: SCNVector3)
+        case bottomLeft(topLeft: SCNVector3, bottomLeft: SCNVector3, bottomRight: SCNVector3)
+        case bottomRight(topRight: SCNVector3, bottomLeft: SCNVector3, bottomRight: SCNVector3)
+    }
+    
     private var rectangle: VNRectangleObservation
     private var corners: RectangleCorners
-    
-//    private var topLeft: SCNVector3?
-//    private var topRight: SCNVector3?
-//    private var bottomLeft: SCNVector3?
-//    private var bottomRight: SCNVector3?
+    private var anchor: ARPlaneAnchor
     
     init?(sceneView: ARSCNView, rectangle: VNRectangleObservation) {
-        self.rectangle = rectangle
-        
-        // Try to find intersecting planes for each corner of rectangle
-        let tl = findIntersectingPlanes(rectangle.topLeft, in: sceneView)
-        let tr = findIntersectingPlanes(rectangle.topRight, in: sceneView)
-        let bl = findIntersectingPlanes(rectangle.bottomLeft, in: sceneView)
-        let br = findIntersectingPlanes(rectangle.bottomRight, in: sceneView)
-        
-        // Check for three corners of rectangle that intersect with the same plane
-        if let surfaceNode = intersect(tl.keys, tr.keys, bl.keys).last { // Try top & left corners
-            corners = .topLeft(topLeft: tl[surfaceNode]!.worldCoordinates,
-                               topRight: tr[surfaceNode]!.worldCoordinates,
-                               bottomLeft: bl[surfaceNode]!.worldCoordinates)
-            self.surfaceNode = surfaceNode
-        } else if let surfaceNode = intersect(tl.keys, tr.keys, bl.keys).last { // Try top & right corners
-            corners = .topRight(topLeft: tl[surfaceNode]!.worldCoordinates,
-                                topRight: tr[surfaceNode]!.worldCoordinates,
-                                bottomRight: br[surfaceNode]!.worldCoordinates)
-            self.surfaceNode = surfaceNode
-        } else if let surfaceNode = intersect(tl.keys, tr.keys, bl.keys).last { // Try bottom & left corners
-            corners = .bottomLeft(topLeft: tl[surfaceNode]!.worldCoordinates,
-                                  bottomLeft: bl[surfaceNode]!.worldCoordinates,
-                                  bottomRight: br[surfaceNode]!.worldCoordinates)
-            self.surfaceNode = surfaceNode
-        } else if let surfaceNode = intersect(tl.keys, tr.keys, bl.keys).last { // Try bottom & right corners
-            corners = .bottomRight(topRight: tr[surfaceNode]!.worldCoordinates,
-                                   bottomLeft: bl[surfaceNode]!.worldCoordinates,
-                                   bottomRight: br[surfaceNode]!.worldCoordinates)
-            self.surfaceNode = surfaceNode
-        } else {
+        guard let cornersAndAnchor = getCorners(for: rectangle, in: sceneView) else {
             return nil
         }
         
+        self.rectangle = rectangle
+        self.corners = cornersAndAnchor.corners
+        self.anchor = cornersAndAnchor.anchor
         super.init()
         
         // We add the new node to ourself since we inherited from SCNNode
@@ -71,21 +46,28 @@ class RectangleNode: SCNNode {
     }
     
     private func createNode() -> SCNNode {
+        // Find width, height, & center from corners
+        let width = findWidth()
+        let height = findHeight()
+        let center = findCenter()
         
-        // Set width & height
-        let planeGeometry = SCNPlane(width: findWidth(), height: findHeight())
+        // Debug
+        print("center: \(center) width: \(width) (\(width * meters2inches)\") height: \(height) (\(height * meters2inches)\")")
+        
+        // Create the 3D plane geometry with the dimensions calculated from corners
+        let planeGeometry = SCNPlane(width: width, height: height)
         let rectNode = SCNNode(geometry: planeGeometry)
 
         // Move the rectangle to the center
-        rectNode.position = findCenter()
-        
+        rectNode.position = center
+
         // Planes in SceneKit are vertical by default so we need to rotate
         // 90 degrees to match planes in ARKit
-        rectNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1.0, 0.0, 0.0)
-        
+//        rectNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1.0, 0.0, 0.0)
+
         // Rotate to align corners
         // TODO
-        
+
         return rectNode
     }
 
@@ -126,23 +108,104 @@ class RectangleNode: SCNNode {
         }
     }
     
+    private func getCornerAngle() -> CGFloat {
+        switch corners {
+        case .topLeft(let c, let a, let b),
+             .topRight(let a, let c, let b),
+             .bottomLeft(let a, let c, let b),
+             .bottomRight(let a, let b, let c):
+            
+            return getAngle(point: a, point: b, vertex: c)
+        }
+    }
+    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
 
-// Finds all known planes that intersect with the specified point
-fileprivate func findIntersectingPlanes(_ point: CGPoint, in sceneView: ARSCNView) -> [SurfaceNode:SCNHitTestResult] {
-    let hitList = sceneView.hitTest(point, options: nil)
-    //            .hitTest(point, types: [.featurePoint])
+// Finds 3d vector points
+fileprivate func getCorners(for rectangle: VNRectangleObservation, in sceneView: ARSCNView) -> (corners: RectangleNode.RectangleCorners, anchor: ARPlaneAnchor)? {
+    // Try to find intersecting surfaces for each corner of rectangle
+    let tl = sceneView.hitTest(sceneView.convertFromCamera(rectangle.topLeft), types: RectangleNode.hitTestTypes)
+    let tr = sceneView.hitTest(sceneView.convertFromCamera(rectangle.topRight), types: RectangleNode.hitTestTypes)
+    let bl = sceneView.hitTest(sceneView.convertFromCamera(rectangle.bottomLeft), types: RectangleNode.hitTestTypes)
+    let br = sceneView.hitTest(sceneView.convertFromCamera(rectangle.bottomRight), types: RectangleNode.hitTestTypes)
     
-    var hitPlanes = [SurfaceNode:SCNHitTestResult]()
-    for hitResult in hitList {
-        if let plane = hitResult.node as? SurfaceNode {
-            hitPlanes[plane] = hitResult
-        }
+    print("tl: \(tl.count) tr: \(tr.count) br: \(br.count) bl: \(bl.count)")
+    
+    // Check for three corners of rectangle that intersect with the same plane
+    
+    // Try top & left corners
+    var surfaces = filterByIntersection([tl, tr, bl], where: RectangleNode.hitResultAnchorComparator)
+    print("tl surfaces: \(surfaces.count)")
+    if let tlHit = surfaces[0].first,
+        let trHit = surfaces[1].first,
+        let blHit = surfaces[2].first,
+        let anchor = tlHit.anchor as? ARPlaneAnchor {
+        
+        print("Corner vectors: \(tlHit.worldVector), \(trHit.worldVector), \(blHit.worldVector)")
+        
+        return (.topLeft(topLeft: tlHit.worldVector,
+                        topRight: trHit.worldVector,
+                        bottomLeft: blHit.worldVector),
+                anchor)
     }
     
-    return hitPlanes
+    // Try top & right corners
+    surfaces = filterByIntersection([tl, tr, br], where: RectangleNode.hitResultAnchorComparator)
+    print("tr surfaces: \(surfaces.count)")
+    if let tlHit = surfaces[0].first,
+        let trHit = surfaces[1].first,
+        let brHit = surfaces[2].first,
+        let anchor = tlHit.anchor as? ARPlaneAnchor {
+        
+        return (.topRight(topLeft: tlHit.worldVector,
+                         topRight: trHit.worldVector,
+                         bottomRight: brHit.worldVector),
+                anchor)
+    }
+    
+    // Try bottom & left corners
+    surfaces = filterByIntersection([tl, bl, br], where: RectangleNode.hitResultAnchorComparator)
+    print("bl surfaces: \(surfaces.count)")
+    if let tlHit = surfaces[0].first,
+        let blHit = surfaces[1].first,
+        let brHit = surfaces[2].first,
+        let anchor = tlHit.anchor as? ARPlaneAnchor {
+        
+        return (.bottomLeft(topLeft: tlHit.worldVector,
+                           bottomLeft: blHit.worldVector,
+                           bottomRight: brHit.worldVector),
+                anchor)
+    }
+    
+    // Try bottom & right corners
+    print("br surfaces: \(surfaces.count)")
+    surfaces = filterByIntersection([tr, bl, br], where: RectangleNode.hitResultAnchorComparator)
+    if let trHit = surfaces[0].first,
+        let blHit = surfaces[2].first,
+        let brHit = surfaces[1].first,
+        let anchor = trHit.anchor as? ARPlaneAnchor {
+        
+        return (.bottomRight(topRight: trHit.worldVector,
+                            bottomLeft: blHit.worldVector,
+                            bottomRight: brHit.worldVector),
+                anchor)
+    }
+    
+    // No 3 points on the same plane
+    return nil
 }
+
+fileprivate func getAngle(point a: SCNVector3, point b: SCNVector3, vertex c: SCNVector3) -> CGFloat {
+    let distA = c.distance(from: b)
+    let distB = c.distance(from: a)
+    let distC = a.distance(from: b)
+    
+    let cosC = ((distA * distA) + (distB * distB) - (distC * distC)) / (2 * distA * distB)
+    return acos(cosC)
+}
+
+
 
