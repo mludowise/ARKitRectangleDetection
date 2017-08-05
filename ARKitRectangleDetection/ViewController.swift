@@ -15,54 +15,88 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
     
-    // Debug settings
-    var displayFoundRectangles = true {
-        didSet {
-            if displayFoundRectangles == false {
-                for view in foundRectangleViews.values {
-                    view.removeFromSuperview()
-                }
-                foundRectangleViews.removeAll()
-            }
-        }
-    }
+    // Only used if showFoundRectangles is true
+    // UIViews used to draw bounding boxes of found rectangles with keys for rectangleObservation.uuid
+    private var foundRectangleOutlineViews = [UUID:UIView]()
     
-    var displayRectangleOutline = true {
-        didSet {
-            if displayRectangleOutline == false {
-                for layer in outlineLayers.values {
-                    layer.removeFromSuperlayer()
-                }
-                outlineLayers.removeAll()
-            }
-        }
-    }
+    // Only used if showSelectedRectangleOutline is true
+    // Displayed rectangle outline
+    private var selectedRectangleOutlineLayer: CAShapeLayer?
     
-    var displaySurfaces = true {
-        didSet {
-            if displaySurfaces == false {
-                for surface in surfaces.values {
-                    surface.removeFromParentNode()
-                }
-                surfaces.removeAll()
-            }
-        }
-    }
-    
-    private var surfaces = [UUID:SurfaceNode]()
-    
-    // Dictionary of VNRectangleObservation UUIDs to drawn layers
-    private var outlineLayers = [UUID:CAShapeLayer]()
-    
-    // Dictionary of VNRectangleObservation UUIDs to views of bounding boxes
-    private var foundRectangleViews = [UUID:UIView]()
+    // Only used if showSurfaces is true
+    // SurfaceNodes used to draw found surfaces with keys for anchor.identifier
+    private var surfaceNodes = [UUID:SurfaceNode]()
     
     // Last rectangle observed
     private var lastObservation: VNRectangleObservation?
     
-    // Dictionary of VNRectangleObservation UUIDs to drawn rectangle nodes
-    private var rectangleNodes = [UUID:RectangleNode]()
+    // Displayed RectangleNodes with keys for rectangleObservation.uuid
+    private var rectangleNodes = [UUID:RectangleNode]()    
     
+    // MARK: - Debug properties
+    
+    // Displays all rectangles found in an image in a blue square
+    var showFoundRectangles = true {
+        didSet {
+            if showFoundRectangles == false {
+                for view in foundRectangleOutlineViews.values {
+                    view.removeFromSuperview()
+                }
+                foundRectangleOutlineViews.removeAll()
+            }
+        }
+    }
+    
+    // Draws a red outline around the selected rectangle that was found
+    var showSelectedRectangleOutline = true {
+        didSet {
+            if showSelectedRectangleOutline == false {
+                selectedRectangleOutlineLayer?.removeFromSuperlayer()
+                selectedRectangleOutlineLayer = nil
+            }
+        }
+    }
+    
+    // Renders a blue grid for any found surfaces
+    var showSurfaces = true {
+        didSet {
+            if showSurfaces == false {
+                for surface in surfaceNodes.values {
+                    surface.removeFromParentNode()
+                }
+                surfaceNodes.removeAll()
+            }
+        }
+    }
+    
+    // Display yellow dots representing feature points
+    var showFeaturePoints = true {
+        didSet {
+            if showFeaturePoints {
+                sceneView.debugOptions.insert(ARSCNDebugOptions.showFeaturePoints)
+            } else {
+                sceneView.debugOptions.remove(ARSCNDebugOptions.showFeaturePoints)
+            }
+        }
+    }
+    
+    // Display origin
+    var showWorldOrigin = true {
+        didSet {
+            if showWorldOrigin {
+                sceneView.debugOptions.insert(ARSCNDebugOptions.showWorldOrigin)
+            } else {
+                sceneView.debugOptions.remove(ARSCNDebugOptions.showWorldOrigin)
+            }
+        }
+    }
+    
+    // Show statistics
+    var showStatistics = false {
+        didSet {
+            sceneView.showsStatistics = showStatistics
+        }
+    }
     
     // MARK: - UIViewController
     
@@ -75,11 +109,19 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         // Comment out to disable rectangle tracking
 //        sceneView.session.delegate = self
         
-        // Show statistics such as fps and timing information
-        sceneView.showsStatistics = true
-        sceneView.autoenablesDefaultLighting = true
-        sceneView.debugOptions = [ARSCNDebugOptions.showWorldOrigin, ARSCNDebugOptions.showFeaturePoints]
+        // Show statistics, world origin, and feature points if desired
+        sceneView.showsStatistics = showStatistics
+        sceneView.debugOptions = []
+        if showFeaturePoints {
+            sceneView.debugOptions.insert(ARSCNDebugOptions.showFeaturePoints)
+        }
+        if showWorldOrigin {
+            sceneView.debugOptions.insert(ARSCNDebugOptions.showWorldOrigin)
+        }
 
+        // Enable default lighting
+        sceneView.autoenablesDefaultLighting = true
+        
         // Create a new scene
         let scene = SCNScene()
         sceneView.scene = scene
@@ -132,12 +174,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     print("\(results.count) rectangles found")
                     
                     // Remove old bounding boxes
-                    for view in self.foundRectangleViews.values {
+                    for view in self.foundRectangleOutlineViews.values {
                         view.removeFromSuperview()
                     }
-                    self.foundRectangleViews.removeAll()
+                    self.foundRectangleOutlineViews.removeAll()
                     
-                    if self.displayFoundRectangles {
+                    if self.showFoundRectangles {
                         // Display bounding boxes
                         for result in results {
                             let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
@@ -146,7 +188,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                             view.layer.borderWidth = 4
                             view.backgroundColor = .clear
                             
-                            self.foundRectangleViews[result.uuid] = view
+                            self.foundRectangleOutlineViews[result.uuid] = view
                             self.sceneView.addSubview(view)
                         }
                     }
@@ -206,7 +248,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        if !displaySurfaces {
+        if !showSurfaces {
             return
         }
         
@@ -215,13 +257,13 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         
         let surface = SurfaceNode(anchor: anchor)
-        surfaces[anchor.identifier] = surface
+        surfaceNodes[anchor.identifier] = surface
         node.addChildNode(surface)
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         // See if this is a plane we are currently rendering
-        guard let surface = surfaces[anchor.identifier],
+        guard let surface = surfaceNodes[anchor.identifier],
             let anchor = anchor as? ARPlaneAnchor else {
                 return
         }
@@ -230,24 +272,22 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
-        guard let surface = surfaces[anchor.identifier] else {
+        guard let surface = surfaceNodes[anchor.identifier] else {
                 return
         }
         
         surface.removeFromParentNode()
         
-        surfaces.removeValue(forKey: anchor.identifier)
+        surfaceNodes.removeValue(forKey: anchor.identifier)
     }
     
     // MARK: - Helper Methods
     
     private func handleRectangleObservation(_ result: VNRectangleObservation) {
-        // Remove old outline & 3d rect
-        if let lastObservation = lastObservation,
-            let layer = outlineLayers[lastObservation.uuid] {
-            outlineLayers.removeValue(forKey: lastObservation.uuid)
-            rectangleNodes.removeValue(forKey: lastObservation.uuid)
+        // Remove old outline of selected rectangle
+        if let layer = selectedRectangleOutlineLayer {
             layer.removeFromSuperlayer()
+            selectedRectangleOutlineLayer = nil
         }
         
         lastObservation = result
@@ -258,10 +298,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         let convertedPoints = points.map { sceneView.convertFromCamera($0) }
         
         // Outline the rectangle
-        if displayRectangleOutline {
-            let layer = drawPolygon(convertedPoints)
-            sceneView.layer.addSublayer(layer)
-            outlineLayers[result.uuid] = layer
+        if showSelectedRectangleOutline {
+            selectedRectangleOutlineLayer = drawPolygon(convertedPoints)
+            sceneView.layer.addSublayer(selectedRectangleOutlineLayer!)
         }
         
         // Convert to 3D coordinates
@@ -289,3 +328,4 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         return layer
     }
 }
+
