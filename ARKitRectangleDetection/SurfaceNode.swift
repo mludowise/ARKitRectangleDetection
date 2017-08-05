@@ -38,7 +38,7 @@ class SurfaceNode: SCNNode {
         let planeNode = SCNNode(geometry: self.planeGeometry)
         
         // Move the plane to the position reported by ARKit
-        planeNode.position = SCNVector3(anchor.center.x, 0, anchor.center.z)
+        self.position = SCNVector3(anchor.center.x, 0, anchor.center.z)
         
         // Planes in SceneKit are vertical by default so we need to rotate
         // 90 degrees to match planes in ARKit

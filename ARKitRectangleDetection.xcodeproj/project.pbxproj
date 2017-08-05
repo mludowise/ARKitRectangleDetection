@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A007122D1F36568B00D192A6 /* PlaneRectangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A007122C1F36568B00D192A6 /* PlaneRectangle.swift */; };
 		A04A97D91F34547100D93A39 /* SCNVector3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */; };
 		A066058B1F351E7000BF2012 /* UIView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A066058A1F351E7000BF2012 /* UIView+Extensions.swift */; };
 		A066058D1F35258700BF2012 /* ARHitTestResult+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A066058C1F35258700BF2012 /* ARHitTestResult+Extensions.swift */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A007122C1F36568B00D192A6 /* PlaneRectangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaneRectangle.swift; sourceTree = "<group>"; };
 		A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extensions.swift"; sourceTree = "<group>"; };
 		A066058A1F351E7000BF2012 /* UIView+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extensions.swift"; sourceTree = "<group>"; };
 		A066058C1F35258700BF2012 /* ARHitTestResult+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ARHitTestResult+Extensions.swift"; sourceTree = "<group>"; };
@@ -69,6 +71,7 @@
 				A0E91F471F341E3800B511F8 /* AppDelegate.swift */,
 				A0E91F4B1F341E3800B511F8 /* ViewController.swift */,
 				A0E91F5C1F341EFA00B511F8 /* SurfaceNode.swift */,
+				A007122C1F36568B00D192A6 /* PlaneRectangle.swift */,
 				A0E91F601F342F9000B511F8 /* RectangleNode.swift */,
 				A0E91F5E1F34256700B511F8 /* Collection+Extensions.swift */,
 				A066058A1F351E7000BF2012 /* UIView+Extensions.swift */,
@@ -161,6 +164,7 @@
 				A0E91F5D1F341EFA00B511F8 /* SurfaceNode.swift in Sources */,
 				A0E91F481F341E3800B511F8 /* AppDelegate.swift in Sources */,
 				A066058B1F351E7000BF2012 /* UIView+Extensions.swift in Sources */,
+				A007122D1F36568B00D192A6 /* PlaneRectangle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

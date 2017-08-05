@@ -265,36 +265,13 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         
         // Convert to 3D coordinates
-        let convertedBoundingBox = sceneView.convertFromCamera(result.boundingBox)
-        let midPoint = CGPoint(x: convertedBoundingBox.midX, y: convertedBoundingBox.midY)
-        let hitTestResults = sceneView.hitTest(midPoint, types: [.existingPlaneUsingExtent, .featurePoint])
-        
-        // Get closest result
-        guard let hitResult = hitTestResults.closest else {
-            print("No anchor for this rectangle")
+        guard let planeRectangle = PlaneRectangle(for: result, in: sceneView) else {
+            print("No plane for this rectangle")
             return
         }
         
-        print("\(hitTestResults.count) anchors found")
-        
-        // TODO: Perform a hit test on all 4 corners
-        // Corners enum should contain all 4 points with 1 optional
-        // Find intersections for each set of corner combinations and use closest set of combined
-        // Keep set of RectangleObservation.uuid : RectangleNode so 3D object can be removed when resetting
-        
-        // Convert to plane anchor
-//        guard let anchor = hitResult.anchor as? ARPlaneAnchor else {
-//            return
-//        }
-        
-//        let node = sceneView.node(for: anchor)
-//        let vector = SCNVector3.positionFromTransform(hitResult.worldTransform)
-        
-        guard let rectangleNode = RectangleNode(sceneView: sceneView, rectangle: result) else {
-            print("No rectangle on plane")
-            return
-        }
-        
+        let rectangleNode = RectangleNode(planeRectangle)
+        rectangleNodes[result.uuid] = rectangleNode
         sceneView.scene.rootNode.addChildNode(rectangleNode)
     }
         
