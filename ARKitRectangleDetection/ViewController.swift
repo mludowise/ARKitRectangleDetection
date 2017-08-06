@@ -13,34 +13,52 @@ import Vision
 
 class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
+    // MARK: - IBOutlets
+    
     @IBOutlet var sceneView: ARSCNView!
+    @IBOutlet weak var messageLabel: UILabel!
+    @IBOutlet weak var messageView: UIView!
+    
+    
+    // MARK: - Internal properties used to identify the rectangle the user is selecting
+    
+    // Displayed rectangle outline
+    private var selectedRectangleOutlineLayer: CAShapeLayer?
+    
+    // Observed rectangle currently being touched
+    private var selectedRectangleObservation: VNRectangleObservation?
+    
+    // The time the current rectangle selection was last updated
+    private var selectedRectangleLastUpdated: Date?
+    
+    // Current touch location
+    private var currTouchLocation: CGPoint?
+    
+    // Gets set to true when actively searching for rectangles in the current frame
+    private var searchingForRectangles = false
+    
+    
+    // MARK: - Rendered items
+    
+    // Displayed RectangleNodes with keys for rectangleObservation.uuid
+    private var rectangleNodes = [UUID:RectangleNode]()
     
     // Only used if showFoundRectangles is true
     // UIViews used to draw bounding boxes of found rectangles with keys for rectangleObservation.uuid
     private var foundRectangleOutlineLayers = [UUID:CAShapeLayer]()
     
-    // Only used if showSelectedRectangleOutline is true
-    // Displayed rectangle outline
-    private var selectedRectangleOutlineLayer: CAShapeLayer?
-    
     // Only used if showSurfaces is true
     // SurfaceNodes used to draw found surfaces with keys for anchor.identifier
     private var surfaceNodes = [UUID:SurfaceNode]()
     
-    // Observed rectangle currently being touched
-    private var selectedRectangleObservation: VNRectangleObservation?
     
-    // Current touch location
-    private var currTouchLocation: CGPoint?
+    // MARK: - Message displayed to the user
     
-    // The time the current rectangle selection was last updated
-    private var selectedRectangleLastUpdated: Date?
-    
-    // Displayed RectangleNodes with keys for rectangleObservation.uuid
-    private var rectangleNodes = [UUID:RectangleNode]()
-    
-    // Gets set to true when actively searching for rectangles in the current frame
-    private var searchingForRectangles = false
+    private var message: Message? {
+        didSet {
+            showMessage(message)
+        }
+    }
     
     // MARK: - Debug properties
     
@@ -135,6 +153,11 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Run the view's session
         sceneView.session.run(configuration)
+        
+        // Tell user to find the a surface if we don't know of any
+        if surfaceNodes.isEmpty {
+            showMessage(.helpFindSurface)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -144,10 +167,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         sceneView.session.pause()
     }
     
+    /*
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Release any cached data, images, etc that aren't in use.
     }
+    */
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first,
@@ -219,6 +244,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         let surface = SurfaceNode(anchor: anchor)
         surfaceNodes[anchor.identifier] = surface
         node.addChildNode(surface)
+        
+        if message == .helpFindSurface {
+            showMessage(.helpTapRect)
+        }
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
@@ -238,11 +267,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         surface.removeFromParentNode()
         
-        surfaceNodes.removeValue(forKey: anchor.identifier)
+        surfaceNodes.removeValue(forKey: anchor.identifier)        
     }
     
     // MARK: - Helper Methods
     
+    // Updates selectedRectangleObservation with the the rectangle found in the given ARFrame at the given location
     private func findRectangle(locationInScene location: CGPoint, frame currentFrame: ARFrame) {
         // Note that we're actively searching for rectangles
         searchingForRectangles = true
@@ -350,5 +380,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         layer.path = path.cgPath
         return layer
+    }
+    
+    private func showMessage(_ message: Message?) {
+        if let message = message {
+            messageView.isHidden = false
+            messageLabel.text = message.localizedString
+            messageLabel.numberOfLines = 0
+            messageLabel.sizeToFit()
+        } else {
+            messageView.isHidden = true
+        }
     }
 }
