@@ -27,32 +27,31 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // SurfaceNodes used to draw found surfaces with keys for anchor.identifier
     private var surfaceNodes = [UUID:SurfaceNode]()
     
-    // Last rectangle observed
-    private var lastObservation: VNRectangleObservation?
+    // Observed rectangle currently being touched
+    private var selectedRectangleObservation: VNRectangleObservation?
+    
+    // Current touch location
+    private var currTouchLocation: CGPoint?
+    
+    // The time the current rectangle selection was last updated
+    private var selectedRectangleLastUpdated: Date?
     
     // Displayed RectangleNodes with keys for rectangleObservation.uuid
-    private var rectangleNodes = [UUID:RectangleNode]()    
+    private var rectangleNodes = [UUID:RectangleNode]()
+    
+    // Gets set to true when actively searching for rectangles in the current frame
+    private var searchingForRectangles = false
     
     // MARK: - Debug properties
     
     // Displays all rectangles found in a blue outline
-    var showFoundRectangles = true {
+    var showFoundRectangles = false {
         didSet {
             if showFoundRectangles == false {
                 for layer in foundRectangleOutlineLayers.values {
                     layer.removeFromSuperlayer()
                 }
                 foundRectangleOutlineLayers.removeAll()
-            }
-        }
-    }
-    
-    // Draws a red outline around the selected rectangle that was found
-    var showSelectedRectangleOutline = true {
-        didSet {
-            if showSelectedRectangleOutline == false {
-                selectedRectangleOutlineLayer?.removeFromSuperlayer()
-                selectedRectangleOutlineLayer = nil
             }
         }
     }
@@ -107,7 +106,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         sceneView.delegate = self
         
         // Comment out to disable rectangle tracking
-//        sceneView.session.delegate = self
+        sceneView.session.delegate = self
         
         // Show statistics, world origin, and feature points if desired
         sceneView.showsStatistics = showStatistics
@@ -156,83 +155,54 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
             return
         }
         
-        let touchLocation = touch.location(in: sceneView)
-        
-        DispatchQueue.global(qos: .background).async {
-            let request = VNDetectRectanglesRequest(completionHandler: { (request, error) in
-                
-                // Jump onto the main thread
-                DispatchQueue.main.async {
-                    
-                    // Access the first result in the array after casting the array as a VNClassificationObservation array
-                    guard let results = request.results as? [VNRectangleObservation],
-                        let _ = results.first else {
-                            print ("No results")
-                            return
-                    }
-                    
-                    print("\(results.count) rectangles found")
-
-                    // Remove old bounding boxes
-                    for layer in self.foundRectangleOutlineLayers.values {
-                        layer.removeFromSuperlayer()
-                    }
-                    self.foundRectangleOutlineLayers.removeAll()
-                    
-                    if self.showFoundRectangles {
-                        // Display bounding boxes
-                        for result in results {
-                            let points = [result.topLeft, result.topRight, result.bottomRight, result.bottomLeft]
-                            let convertedPoints = points.map { self.sceneView.convertFromCamera($0) }
-                            let layer = self.drawPolygon(convertedPoints, color: UIColor.blue)
-                            self.foundRectangleOutlineLayers[result.uuid] = layer
-                            self.sceneView.layer.addSublayer(layer)
-                        }
-                    }
-                    
-                    guard let result = results.filter({ (result) -> Bool in
-                        let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
-                        return convertedRect.contains(touchLocation)
-                    }).first else {
-                        return
-                    }
-                    
-                    self.handleRectangleObservation(result)
-                }
-            })
-            request.maximumObservations = 0
-            let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
-            try? handler.perform([request])
-        }
+        currTouchLocation = touch.location(in: sceneView)
+        findRectangle(locationInScene: currTouchLocation!, frame: currentFrame)
     }
     
-    // MARK: - ARSessionDelegate
-    
-    func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        guard let observation = lastObservation,
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // Ignore if we're currently searching for a rect
+        if searchingForRectangles {
+            return
+        }
+        
+        guard let touch = touches.first,
             let currentFrame = sceneView.session.currentFrame else {
                 return
         }
         
-        DispatchQueue.global(qos: .background).async {
-            let request = VNTrackRectangleRequest(rectangleObservation: observation, completionHandler: { (request, error) in
-                // Jump onto the main thread
-                DispatchQueue.main.async {
-                    
-                    // Access the first result in the array after casting the array as a VNClassificationObservation array
-                    guard let results = request.results as? [VNRectangleObservation],
-                        let result = results.first else {
-                            print ("No results")
-                            return
-                    }
-                    
-                    self.handleRectangleObservation(result)
-                }
-            })
-            request.trackingLevel = .accurate
-            let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
-            try? handler.perform([request])
+        currTouchLocation = touch.location(in: sceneView)
+        findRectangle(locationInScene: currTouchLocation!, frame: currentFrame)
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        currTouchLocation = nil
+        
+        guard let selectedRect = selectedRectangleObservation else {
+            return
         }
+        
+        // Create a planeRect and add a RectangleNode
+        addPlaneRect(for: selectedRect)
+    }
+    
+    // MARK: - ARSessionDelegate
+    
+    // Update selected rectangle if it's been more than 1 second and the screen is still being touched
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        if searchingForRectangles {
+            return
+        }
+        
+        guard let currTouchLocation = currTouchLocation,
+            let currentFrame = sceneView.session.currentFrame else {
+                return
+        }
+        
+        if selectedRectangleLastUpdated?.timeIntervalSinceNow ?? 0 < 1 {
+            return
+        }
+        
+        findRectangle(locationInScene: currTouchLocation, frame: currentFrame)
     }
     
     // MARK: - ARSCNViewDelegate
@@ -273,37 +243,101 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     // MARK: - Helper Methods
     
-    private func handleRectangleObservation(_ result: VNRectangleObservation) {
+    private func findRectangle(locationInScene location: CGPoint, frame currentFrame: ARFrame) {
+        // Note that we're actively searching for rectangles
+        searchingForRectangles = true
+        selectedRectangleObservation = nil
+        
+        // Perform request on background thread
+        DispatchQueue.global(qos: .background).async {
+            let request = VNDetectRectanglesRequest(completionHandler: { (request, error) in
+                
+                // Jump back onto the main thread
+                DispatchQueue.main.async {
+                    
+                    // Mark that we've finished searching for rectangles
+                    self.searchingForRectangles = false
+                    
+                    // Access the first result in the array after casting the array as a VNClassificationObservation array
+                    guard let observations = request.results as? [VNRectangleObservation],
+                        let _ = observations.first else {
+                            print ("No results")
+                            return
+                    }
+                    
+                    print("\(observations.count) rectangles found")
+                    
+                    // Remove outlines for all found rectangles
+                    for layer in self.foundRectangleOutlineLayers.values {
+                        layer.removeFromSuperlayer()
+                    }
+                    self.foundRectangleOutlineLayers.removeAll()
+                    
+                    // Remove outline for selected rectangle
+                    if let layer = self.selectedRectangleOutlineLayer {
+                        layer.removeFromSuperlayer()
+                        self.selectedRectangleOutlineLayer = nil
+                    }
+                    
+                    // Display outlines for all found rectangles
+                    if self.showFoundRectangles {
+                        // Display bounding boxes
+                        for observedRect in observations {
+                            let points = [observedRect.topLeft, observedRect.topRight, observedRect.bottomRight, observedRect.bottomLeft]
+                            let convertedPoints = points.map { self.sceneView.convertFromCamera($0) }
+                            let layer = self.drawPolygon(convertedPoints, color: UIColor.blue)
+                            self.foundRectangleOutlineLayers[observedRect.uuid] = layer
+                            self.sceneView.layer.addSublayer(layer)
+                        }
+                    }
+                    
+                    // Find the rect that overlaps with the given location in sceneView
+                    guard let selectedRect = observations.filter({ (result) -> Bool in
+                        let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
+                        return convertedRect.contains(location)
+                    }).first else {
+                        return
+                    }
+                    
+                    // Outline selected rectangle
+                    let points = [selectedRect.topLeft, selectedRect.topRight, selectedRect.bottomRight, selectedRect.bottomLeft]
+                    let convertedPoints = points.map { self.sceneView.convertFromCamera($0) }
+                    self.selectedRectangleOutlineLayer = self.drawPolygon(convertedPoints, color: UIColor.red)
+                    self.sceneView.layer.addSublayer(self.selectedRectangleOutlineLayer!)
+                    
+                    // Do stuff with the observed rectangle
+                    self.selectedRectangleObservation = selectedRect
+                    self.selectedRectangleLastUpdated = Date()
+                }
+            })
+            
+            // Don't limit resulting number of observations
+            request.maximumObservations = 0
+            
+            // Perform request
+            let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
+            try? handler.perform([request])
+        }
+    }
+    
+    private func addPlaneRect(for observedRect: VNRectangleObservation) {
         // Remove old outline of selected rectangle
         if let layer = selectedRectangleOutlineLayer {
             layer.removeFromSuperlayer()
             selectedRectangleOutlineLayer = nil
         }
         
-        lastObservation = result
-        
-        // Convert points to view
-        // VNObservation coordinates are in camera coordinates, which depend on the phone's orientation
-        let points = [result.topLeft, result.topRight, result.bottomRight, result.bottomLeft]
-        let convertedPoints = points.map { sceneView.convertFromCamera($0) }
-        
-        // Outline the rectangle
-        if showSelectedRectangleOutline {
-            selectedRectangleOutlineLayer = drawPolygon(convertedPoints, color: UIColor.red)
-            sceneView.layer.addSublayer(selectedRectangleOutlineLayer!)
-        }
-        
         // Convert to 3D coordinates
-        guard let planeRectangle = PlaneRectangle(for: result, in: sceneView) else {
+        guard let planeRectangle = PlaneRectangle(for: observedRect, in: sceneView) else {
             print("No plane for this rectangle")
             return
         }
         
         let rectangleNode = RectangleNode(planeRectangle)
-        rectangleNodes[result.uuid] = rectangleNode
+        rectangleNodes[observedRect.uuid] = rectangleNode
         sceneView.scene.rootNode.addChildNode(rectangleNode)
     }
-        
+    
     private func drawPolygon(_ points: [CGPoint], color: UIColor) -> CAShapeLayer {
         let layer = CAShapeLayer()
         layer.fillColor = nil
