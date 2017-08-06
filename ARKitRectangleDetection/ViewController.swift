@@ -40,16 +40,11 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     // MARK: - Rendered items
     
-    // Displayed RectangleNodes with keys for rectangleObservation.uuid
-    private var rectangleNodes = [UUID:RectangleNode]()
+    // RectangleNodes with keys for rectangleObservation.uuid
+    private var rectangleNodes = [VNRectangleObservation:RectangleNode]()
     
-    // Only used if showFoundRectangles is true
-    // UIViews used to draw bounding boxes of found rectangles with keys for rectangleObservation.uuid
-    private var foundRectangleOutlineLayers = [UUID:CAShapeLayer]()
-    
-    // Only used if showSurfaces is true
-    // SurfaceNodes used to draw found surfaces with keys for anchor.identifier
-    private var surfaceNodes = [UUID:SurfaceNode]()
+    // Used to lookup SurfaceNodes by planeAnchor and update them
+    private var surfaceNodes = [ARPlaneAnchor:SurfaceNode]()
     
     
     // MARK: - Message displayed to the user
@@ -60,60 +55,11 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
     }
     
+    
     // MARK: - Debug properties
     
-    // Displays all rectangles found in a blue outline
-    var showFoundRectangles = false {
-        didSet {
-            if showFoundRectangles == false {
-                for layer in foundRectangleOutlineLayers.values {
-                    layer.removeFromSuperlayer()
-                }
-                foundRectangleOutlineLayers.removeAll()
-            }
-        }
-    }
+    var showDebugOptions = true
     
-    // Renders a blue grid for any found surfaces
-    var showSurfaces = true {
-        didSet {
-            if showSurfaces == false {
-                for surface in surfaceNodes.values {
-                    surface.removeFromParentNode()
-                }
-                surfaceNodes.removeAll()
-            }
-        }
-    }
-    
-    // Display yellow dots representing feature points
-    var showFeaturePoints = true {
-        didSet {
-            if showFeaturePoints {
-                sceneView.debugOptions.insert(ARSCNDebugOptions.showFeaturePoints)
-            } else {
-                sceneView.debugOptions.remove(ARSCNDebugOptions.showFeaturePoints)
-            }
-        }
-    }
-    
-    // Display origin
-    var showWorldOrigin = true {
-        didSet {
-            if showWorldOrigin {
-                sceneView.debugOptions.insert(ARSCNDebugOptions.showWorldOrigin)
-            } else {
-                sceneView.debugOptions.remove(ARSCNDebugOptions.showWorldOrigin)
-            }
-        }
-    }
-    
-    // Show statistics
-    var showStatistics = false {
-        didSet {
-            sceneView.showsStatistics = showStatistics
-        }
-    }
     
     // MARK: - UIViewController
     
@@ -126,14 +72,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         // Comment out to disable rectangle tracking
         sceneView.session.delegate = self
         
-        // Show statistics, world origin, and feature points if desired
-        sceneView.showsStatistics = showStatistics
-        sceneView.debugOptions = []
-        if showFeaturePoints {
-            sceneView.debugOptions.insert(ARSCNDebugOptions.showFeaturePoints)
-        }
-        if showWorldOrigin {
-            sceneView.debugOptions.insert(ARSCNDebugOptions.showWorldOrigin)
+        // Show world origin and feature points if desired
+        if showDebugOptions {
+            sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
         }
 
         // Enable default lighting
@@ -166,13 +107,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
-    
-    /*
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Release any cached data, images, etc that aren't in use.
-    }
-    */
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first,
@@ -233,16 +167,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        if !showSurfaces {
-            return
-        }
-        
         guard let anchor = anchor as? ARPlaneAnchor else {
             return
         }
         
         let surface = SurfaceNode(anchor: anchor)
-        surfaceNodes[anchor.identifier] = surface
+        surfaceNodes[anchor] = surface
         node.addChildNode(surface)
         
         if message == .helpFindSurface {
@@ -252,8 +182,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         // See if this is a plane we are currently rendering
-        guard let surface = surfaceNodes[anchor.identifier],
-            let anchor = anchor as? ARPlaneAnchor else {
+        guard let anchor = anchor as? ARPlaneAnchor,
+            let surface = surfaceNodes[anchor] else {
                 return
         }
         
@@ -261,13 +191,14 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
-        guard let surface = surfaceNodes[anchor.identifier] else {
+        guard let anchor = anchor as? ARPlaneAnchor,
+            let surface = surfaceNodes[anchor] else {
                 return
         }
-        
+
         surface.removeFromParentNode()
         
-        surfaceNodes.removeValue(forKey: anchor.identifier)        
+        surfaceNodes.removeValue(forKey: anchor)
     }
     
     // MARK: - Helper Methods
@@ -297,28 +228,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     
                     print("\(observations.count) rectangles found")
                     
-                    // Remove outlines for all found rectangles
-                    for layer in self.foundRectangleOutlineLayers.values {
-                        layer.removeFromSuperlayer()
-                    }
-                    self.foundRectangleOutlineLayers.removeAll()
-                    
                     // Remove outline for selected rectangle
                     if let layer = self.selectedRectangleOutlineLayer {
                         layer.removeFromSuperlayer()
                         self.selectedRectangleOutlineLayer = nil
-                    }
-                    
-                    // Display outlines for all found rectangles
-                    if self.showFoundRectangles {
-                        // Display bounding boxes
-                        for observedRect in observations {
-                            let points = [observedRect.topLeft, observedRect.topRight, observedRect.bottomRight, observedRect.bottomLeft]
-                            let convertedPoints = points.map { self.sceneView.convertFromCamera($0) }
-                            let layer = self.drawPolygon(convertedPoints, color: UIColor.blue)
-                            self.foundRectangleOutlineLayers[observedRect.uuid] = layer
-                            self.sceneView.layer.addSublayer(layer)
-                        }
                     }
                     
                     // Find the rect that overlaps with the given location in sceneView
@@ -364,7 +277,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         
         let rectangleNode = RectangleNode(planeRectangle)
-        rectangleNodes[observedRect.uuid] = rectangleNode
+        rectangleNodes[observedRect] = rectangleNode
         sceneView.scene.rootNode.addChildNode(rectangleNode)
     }
     
