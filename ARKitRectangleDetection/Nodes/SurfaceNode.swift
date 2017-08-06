@@ -26,7 +26,7 @@ class SurfaceNode: SCNNode {
         // Instead of just visualizing the grid as a gray plane, we will render
         // it in some Tron style colours.
         let material = SCNMaterial()
-        let img = UIImage(named: "tron_grid")
+        let img = #imageLiteral(resourceName: "tron_grid")
         material.diffuse.contents = img
         
         // Set grid image to 1" per square (image is 0.4064 m)
