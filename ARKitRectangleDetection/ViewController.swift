@@ -28,6 +28,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // Displayed rectangle outline
     private var selectedRectangleOutlineLayer: CAShapeLayer?
     
+    // Displays image outline
+    private var selectedImageOutlineLayer: CAShapeLayer?
+    
     // Observed rectangle currently being touched
     private var selectedRectangleObservation: VNRectangleObservation?
     
@@ -178,7 +181,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         
         // Create a planeRect and add a RectangleNode
-        addPlaneRect(for: selectedRect)
+//        addPlaneRect(for: selectedRect)
     }
     
     // MARK: - IBOutlets
@@ -284,6 +287,11 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Perform request on background thread
         DispatchQueue.global(qos: .background).async {
+            
+            let image = #imageLiteral(resourceName: "rebel-sm").cgImage!
+            self.findTranslationalImage(for: image, locationInScene: location, frame: currentFrame)
+            self.findHomographicImage(for: image, locationInScene: location, frame: currentFrame)
+            
             let request = VNDetectRectanglesRequest(completionHandler: { (request, error) in
                 
                 // Jump back onto the main thread
@@ -320,6 +328,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     
                     // Outline selected rectangle
                     let points = [selectedRect.topLeft, selectedRect.topRight, selectedRect.bottomRight, selectedRect.bottomLeft]
+                    print("Rectangle corners: \(points)")
                     let convertedPoints = points.map { self.sceneView.convertFromCamera($0) }
                     self.selectedRectangleOutlineLayer = self.drawPolygon(convertedPoints, color: UIColor.red)
                     self.sceneView.layer.addSublayer(self.selectedRectangleOutlineLayer!)
@@ -330,10 +339,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     
                     // Check if the user stopped touching the screen while we were in the background.
                     // If so, then we should add the planeRect here instead of waiting for touches to end.
-                    if self.currTouchLocation == nil {
-                        // Create a planeRect and add a RectangleNode
-                        self.addPlaneRect(for: selectedRect)
-                    }
+//                    if self.currTouchLocation == nil {
+//                        // Create a planeRect and add a RectangleNode
+//                        self.addPlaneRect(for: selectedRect)
+//                    }
                 }
             })
             
@@ -344,6 +353,99 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
             let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
             try? handler.perform([request])
         }
+    }
+    
+    private func findTranslationalImage(for image: CGImage, locationInScene location: CGPoint, frame currentFrame: ARFrame) {
+        let request = VNTranslationalImageRegistrationRequest(targetedCGImage: image, completionHandler: { (request, error) in
+            DispatchQueue.main.async {
+                // Access the first result in the array after casting the array as a VNClassificationObservation array
+                guard let observations = request.results as? [VNImageHomographicAlignmentObservation],
+                    let _ = observations.first else {
+                        print ("No translational results")
+                        return
+                }
+                
+                print("\(observations.count) translational images found")
+
+            //                    // Get closest image location
+            //                    let imgLoc = observations.map({
+            //                        convertFromCamera(CGPoint(x: -$0.alignmentTransform.tx, y: -$0.alignmentTransform.ty))
+            //                    }).sorted(by: { (loc1, loc2) -> Bool in
+            //                        location.distance(from: loc1) < location.distance(from: loc2)
+            //                    }).first!
+            //
+            //                    if imgLoc.distance(from: location) > 100 {
+            //                        print("No results at touch location")
+            //                        self.message = .errNoRect
+            //                        return
+            //                    }
+            //
+            //                    let points = [CGPoint(x: imgLoc.x - 5, y: imgLoc.y - 5),
+            //                                  CGPoint(x: imgLoc.x + 5, y: imgLoc.y - 5),
+            //                                  CGPoint(x: imgLoc.x + 5, y: imgLoc.y + 5),
+            //                                  CGPoint(x: imgLoc.x - 5, y: imgLoc.y + 5)]
+            //                    self.selectedRectangleOutlineLayer = self.drawPolygon(points, color: UIColor.red)
+            //                    self.sceneView.layer.addSublayer(self.selectedRectangleOutlineLayer!)
+            }
+        })
+        
+        // Perform request
+        let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
+        try? handler.perform([request])
+    }
+    
+    private func findHomographicImage(for image: CGImage, locationInScene location: CGPoint, frame currentFrame: ARFrame) {
+        let request = VNHomographicImageRegistrationRequest(targetedCGImage: image, completionHandler: { (request, error) in
+            DispatchQueue.main.async {
+                // Access the first result in the array after casting the array as a VNClassificationObservation array
+                guard let observations = request.results as? [VNImageHomographicAlignmentObservation],
+                    let _ = observations.first else {
+                        print ("No homographic results")
+                        return
+                }
+                
+                // Remove outline for selected rectangle
+                if let layer = self.selectedImageOutlineLayer {
+                    layer.removeFromSuperlayer()
+                    self.selectedImageOutlineLayer = nil
+                }
+                
+                print("\(observations.count) homographic images found")
+                
+                let transforms = observations.map({ $0.warpTransform })
+                print("homographic transforms: \(transforms)")
+                
+                let corners = transforms.map({ (transform) -> [CGPoint] in
+                    // No inverse
+                    if transform.determinant == 0 {
+                        return []
+                    }
+                    
+                    let inverse = transform.inverse
+                    let tl = CGPoint.zero.apply(inverse)
+                    let tr = CGPoint(x: image.width, y: 0).apply(inverse)
+                    let br = CGPoint(x: image.width, y: image.height).apply(inverse)
+                    let bl = CGPoint(x: 0, y: image.height).apply(inverse)
+
+                    return [tl, tr, br, bl]
+                })
+                
+                print("homographic corners: \(corners)")
+                self.selectedImageOutlineLayer = self.drawPolygon(corners.first!, color: UIColor.blue)
+                self.sceneView.layer.addSublayer(self.selectedImageOutlineLayer!)
+
+                let relativeTouch = transforms.map({ (transform) -> CGPoint in
+                    let imgLoc = location.apply(transform)
+                    return CGPoint(x: imgLoc.x / CGFloat(image.width), y: imgLoc.y / CGFloat(image.height))
+                })
+                
+                print("homographic relative locations: \(relativeTouch))")
+            }
+        })
+        
+        // Perform request
+        let handler = VNImageRequestHandler(cvPixelBuffer: currentFrame.capturedImage, options: [:])
+        try? handler.perform([request])
     }
     
     private func addPlaneRect(for observedRect: VNRectangleObservation) {
@@ -367,11 +469,15 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     private func drawPolygon(_ points: [CGPoint], color: UIColor) -> CAShapeLayer {
         let layer = CAShapeLayer()
+        guard let last = points.last else {
+            return layer
+        }
+        
         layer.fillColor = nil
         layer.strokeColor = color.cgColor
         layer.lineWidth = 2
         let path = UIBezierPath()
-        path.move(to: points.last!)
+        path.move(to: last)
         points.forEach { point in
             path.addLine(to: point)
         }
@@ -384,5 +490,50 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         button.layer.borderWidth = 1
         button.layer.cornerRadius = 4
         button.setTitle(localizedTitle, for: .normal)
+    }
+}
+
+extension CGPoint {
+    func distance(from point: CGPoint) -> CGFloat {
+        let deltaX = self.x - point.x
+        let deltaY = self.y - point.y
+        return sqrt(deltaX * deltaX + deltaY * deltaY)
+    }
+    
+    func apply(_ transform: matrix_float3x3) -> CGPoint {
+        let a = CGFloat(transform.columns.0.x)
+        let b = CGFloat(transform.columns.1.x)
+        let c = CGFloat(transform.columns.2.x)
+        let d = CGFloat(transform.columns.0.y)
+        let e = CGFloat(transform.columns.1.y)
+        let f = CGFloat(transform.columns.2.y)
+        let g = CGFloat(transform.columns.0.z)
+        let h = CGFloat(transform.columns.1.z)
+        let i = CGFloat(transform.columns.2.z)
+        
+        let cx = a * x + b * y + c
+        let cy = d * x + e * y + f
+        let cw = g * x + h * y + i
+        
+        return CGPoint(x: cx / cw, y: cy / cw)
+    }
+}
+
+fileprivate func convertFromCamera(_ point: CGPoint, in view: UIView) -> CGPoint {
+    let orientation = UIApplication.shared.statusBarOrientation
+    
+    switch orientation {
+    case .portrait, .unknown:
+        // Rotate right
+        return CGPoint(x: view.frame.width - point.y, y: point.x)
+    case .landscapeLeft:
+        // Rotate 180
+        return CGPoint(x: view.frame.width - point.x, y: view.frame.height - point.y)
+    case .landscapeRight:
+        // Do nothing
+        return CGPoint(x: point.y, y: point.x)
+    case .portraitUpsideDown:
+        // Rotate left
+        return CGPoint(x: view.frame.width - point.y, y: view.frame.height - point.x)
     }
 }
