@@ -1,9 +1,13 @@
-# ARKitRectangleDetection
+# ARKit + Vision for Rectangle Detection
 
 This project demonstrates how to use Apple's Vision library to identify rectangles and model them in 3D using ARKit.
-<iframe width="560" height="315" src="https://www.youtube.com/embed/57rLJlsp8YM?ecver=1" frameborder="0" allowfullscreen></iframe>
 
-If you're not already familiar with the ARKit and Vision libraries, it's worth the time to read Apple's overviews on how to use them. There are also some great tutorials out there to get up to speed. I went through the following in a couple hours to get acquainted with them myself:
+[![View Demo](https://img.youtube.com/vi/57rLJlsp8YM/0.jpg)](https://youtu.be/57rLJlsp8YM)
+
+[🎦 View Demo on YouTube](https://youtu.be/57rLJlsp8YM)
+
+## Background
+If you're not already familiar with the [ARKit](https://developer.apple.com/documentation/arkit/understanding_augmented_reality) and [Vision](https://developer.apple.com/documentation/vision) libraries, it's worth the time to read Apple's overviews on how to use them. There are also some great tutorials out there to get up to speed. I went through the following in a couple hours to get acquainted with them myself:
 - [ARKit Tutorial: Simple Augmented Reality Game](https://www.youtube.com/watch?v=R8U8rGdMop4) by [Brian Advent](https://github.com/brianadvent/)
   - The basics of displaying items in space and performing hitTests.
 - [ARKit By Example — Part 2: Plane Detection + Visualization](https://blog.markdaws.net/arkit-by-example-part-2-plane-detection-visualization-10f05876d53) by [Mark Dawson](https://github.com/markdaws)
@@ -12,7 +16,7 @@ If you're not already familiar with the ARKit and Vision libraries, it's worth t
   - Using Vision models to correlate them with realy objects in ARKit.
   - More information about horizontal planes & feature points in ARKit.
 
-# How it Works
+## How it Works
 The `findRectangle(locationInScene location: CGPoint, frame currentFrame: ARFrame)` method inside of `ViewController.swift` uses the location the user touched on the screen and the current frame from ARKit to find any rectangles in the current frame.
 
 The custom `PlaneRectangle` class converts the corners returned by the `VNRectangleObservation` into 2D coordinates inside of `sceneView` and performes a `hitTest` on each of the corners to find where they intersect with a plane inside of the scene and calculates the rectangles dimensions, position, and orientation on the plane.
