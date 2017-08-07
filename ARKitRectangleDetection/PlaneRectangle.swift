@@ -130,8 +130,8 @@ fileprivate func getCorners(for rectangle: VNRectangleObservation, in sceneView:
     // Check bottom & right corners for a common anchor
     surfaces = filterByIntersection([tr, bl, br], where: hitResultAnchorComparator)
     if let trHit = surfaces[0].first,
-        let blHit = surfaces[2].first,
-        let brHit = surfaces[1].first,
+        let blHit = surfaces[1].first,
+        let brHit = surfaces[2].first,
         let anchor = trHit.anchor as? ARPlaneAnchor {
         
         print("Found bottom right corners: \(trHit.worldVector), \(blHit.worldVector), \(brHit.worldVector)")
