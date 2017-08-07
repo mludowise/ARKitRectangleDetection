@@ -20,6 +20,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     @IBOutlet weak var messageView: UIView!
     @IBOutlet weak var clearButton: UIButton!
     @IBOutlet weak var restartButton: UIButton!
+    @IBOutlet weak var debugButton: UIButton!
     
     
     // MARK: - Internal properties used to identify the rectangle the user is selecting
@@ -50,7 +51,15 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     // MARK: - Debug properties
     
-    var showDebugOptions = true
+    var showDebugOptions = false {
+        didSet {
+            if showDebugOptions {
+                sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
+            } else {
+              sceneView.debugOptions = []
+            }
+        }
+    }
     
     
     // MARK: - Message displayed to the user
@@ -72,6 +81,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     
     // MARK: - UIViewController
+    
+    override var prefersStatusBarHidden: Bool {
+        get {
+            return true
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -98,8 +113,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         message = nil
         
         // Style clear button
-        styleButton(clearButton, localizedTitle: NSLocalizedString("Clear", comment: ""))
+        styleButton(clearButton, localizedTitle: NSLocalizedString("Clear Rects", comment: ""))
         styleButton(restartButton, localizedTitle: NSLocalizedString("Restart", comment: ""))
+        styleButton(debugButton, localizedTitle: NSLocalizedString("Debug", comment: ""))
+        debugButton.isSelected = showDebugOptions
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -184,6 +201,19 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Update message
         message = .helpFindSurface
+    }
+    
+    @IBAction func onDebugButton(_ sender: Any) {
+        showDebugOptions = !showDebugOptions
+        debugButton.isSelected = showDebugOptions
+        
+        if showDebugOptions {
+            debugButton.layer.backgroundColor = UIColor.yellow.cgColor
+            debugButton.layer.borderColor = UIColor.yellow.cgColor
+        } else {
+            debugButton.layer.backgroundColor = UIColor.black.withAlphaComponent(0.5).cgColor
+            debugButton.layer.borderColor = UIColor.white.cgColor
+        }
     }
     
     // MARK: - ARSessionDelegate
@@ -349,7 +379,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     }
     
     private func styleButton(_ button: UIButton, localizedTitle: String?) {
-        button.layer.borderColor = UIColor.yellow.cgColor
+        button.layer.borderColor = UIColor.white.cgColor
         button.layer.borderWidth = 1
         button.layer.cornerRadius = 4
         button.setTitle(localizedTitle, for: .normal)

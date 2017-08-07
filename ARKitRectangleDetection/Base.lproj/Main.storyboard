@@ -39,42 +39,65 @@
                                     <constraint firstItem="ZBl-Tv-UYE" firstAttribute="leading" secondItem="Wcr-4o-ghG" secondAttribute="leading" constant="16" id="sXx-WH-OCR"/>
                                 </constraints>
                             </view>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6YM-9t-ZZe">
-                                <rect key="frame" x="307" y="20" width="52" height="34"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
-                                <inset key="contentEdgeInsets" minX="8" minY="8" maxX="8" maxY="8"/>
-                                <state key="normal" title="Clear">
-                                    <color key="titleColor" red="1" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                </state>
-                                <connections>
-                                    <action selector="onClearButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="rVi-Uz-33i"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6OC-Jo-UXh">
-                                <rect key="frame" x="16" y="19" width="66" height="34"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6OC-Jo-UXh">
+                                <rect key="frame" x="293" y="36" width="66" height="34"/>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
                                 <inset key="contentEdgeInsets" minX="8" minY="8" maxX="8" maxY="8"/>
                                 <state key="normal" title="Restart">
-                                    <color key="titleColor" red="1" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
                                     <action selector="onClearButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="Ldc-g7-2Lf"/>
                                     <action selector="onRestartButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="fWz-OW-emi"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cXR-Dy-jPE">
+                                <rect key="frame" x="16" y="36" width="62" height="34"/>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
+                                <color key="tintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <inset key="contentEdgeInsets" minX="8" minY="8" maxX="8" maxY="8"/>
+                                <state key="normal" title="Debug">
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <state key="selected">
+                                    <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
+                                </state>
+                                <connections>
+                                    <action selector="onClearButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="mzD-Mn-RqD"/>
+                                    <action selector="onDebugButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="6sY-1r-WOn"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6YM-9t-ZZe">
+                                <rect key="frame" x="190" y="36" width="95" height="34"/>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
+                                <inset key="contentEdgeInsets" minX="8" minY="8" maxX="8" maxY="8"/>
+                                <state key="normal" title="Clear Rects">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="onClearButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="rVi-Uz-33i"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="Wcr-4o-ghG" firstAttribute="bottom" secondItem="zmo-nJ-q2Z" secondAttribute="bottom" id="8dc-QZ-K3W"/>
+                            <constraint firstItem="6YM-9t-ZZe" firstAttribute="centerY" secondItem="cXR-Dy-jPE" secondAttribute="centerY" id="FnO-sp-bnn"/>
+                            <constraint firstItem="zmo-nJ-q2Z" firstAttribute="trailing" secondItem="6OC-Jo-UXh" secondAttribute="trailing" constant="16" id="OCU-dE-gtN"/>
+                            <constraint firstItem="cXR-Dy-jPE" firstAttribute="leading" secondItem="zmo-nJ-q2Z" secondAttribute="leading" constant="16" id="PiD-YB-CeS"/>
                             <constraint firstItem="Wcr-4o-ghG" firstAttribute="trailing" secondItem="zmo-nJ-q2Z" secondAttribute="trailing" id="TIK-VO-ejK"/>
+                            <constraint firstItem="6OC-Jo-UXh" firstAttribute="leading" secondItem="6YM-9t-ZZe" secondAttribute="trailing" constant="8" id="i6l-Y3-XiG"/>
                             <constraint firstItem="Wcr-4o-ghG" firstAttribute="leading" secondItem="zmo-nJ-q2Z" secondAttribute="leading" id="le0-HY-pWl"/>
+                            <constraint firstItem="cXR-Dy-jPE" firstAttribute="top" secondItem="zmo-nJ-q2Z" secondAttribute="top" constant="16" id="plF-RX-eoW"/>
+                            <constraint firstItem="6YM-9t-ZZe" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="cXR-Dy-jPE" secondAttribute="trailing" constant="16" id="qyk-86-L3s"/>
+                            <constraint firstItem="6OC-Jo-UXh" firstAttribute="centerY" secondItem="cXR-Dy-jPE" secondAttribute="centerY" id="uD8-tK-Gbp"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="zmo-nJ-q2Z"/>
                     </view>
+                    <nil key="simulatedStatusBarMetrics"/>
                     <connections>
                         <outlet property="clearButton" destination="6YM-9t-ZZe" id="aKc-OP-hCE"/>
+                        <outlet property="debugButton" destination="cXR-Dy-jPE" id="mUo-Tn-xm0"/>
                         <outlet property="messageLabel" destination="ZBl-Tv-UYE" id="vD6-Ss-dis"/>
                         <outlet property="messageView" destination="Wcr-4o-ghG" id="SXn-dX-OUd"/>
                         <outlet property="restartButton" destination="6OC-Jo-UXh" id="i4T-mH-NRY"/>
