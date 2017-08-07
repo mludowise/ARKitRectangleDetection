@@ -72,6 +72,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     self.messageLabel.text = message.localizedString
                     self.messageLabel.numberOfLines = 0
                     self.messageLabel.sizeToFit()
+                    self.messageLabel.superview?.setNeedsLayout()
                 } else {
                     self.messageView.isHidden = true
                 }
