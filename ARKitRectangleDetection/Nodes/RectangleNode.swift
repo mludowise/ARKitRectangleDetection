@@ -15,14 +15,21 @@ private let meters2inches = CGFloat(39.3701)
 
 class RectangleNode: SCNNode {
     
-    init(_ planeRectangle: PlaneRectangle) {
+    convenience init(_ planeRectangle: PlaneRectangle) {
+        self.init(center: planeRectangle.position,
+        width: planeRectangle.size.width,
+        height: planeRectangle.size.height,
+        orientation: planeRectangle.orientation)
+    }
+    
+    init(center position: SCNVector3, width: CGFloat, height: CGFloat, orientation: Float) {
         super.init()
         
         // Debug
-        print("position: \(planeRectangle.position) width: \(planeRectangle.size.width) (\(planeRectangle.size.width * meters2inches)\") height: \(planeRectangle.size.height) (\(planeRectangle.size.height * meters2inches)\")")
+        print("position: \(position) width: \(width) (\(width * meters2inches)\") height: \(height) (\(height * meters2inches)\")")
         
         // Create the 3D plane geometry with the dimensions calculated from corners
-        let planeGeometry = SCNPlane(width: planeRectangle.size.width, height: planeRectangle.size.height)
+        let planeGeometry = SCNPlane(width: width, height: height)
         let rectNode = SCNNode(geometry: planeGeometry)
 
         // Planes in SceneKit are vertical by default so we need to rotate
@@ -30,7 +37,7 @@ class RectangleNode: SCNNode {
         var transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1.0, 0.0, 0.0)
         
         // Set rotation to the corner of the rectangle
-        transform = SCNMatrix4Rotate(transform, planeRectangle.orientation, 0, 1, 0)
+        transform = SCNMatrix4Rotate(transform, orientation, 0, 1, 0)
         
         rectNode.transform = transform
         
@@ -38,7 +45,7 @@ class RectangleNode: SCNNode {
         self.addChildNode(rectNode)
         
         // Set position to the center of rectangle
-        self.position = planeRectangle.position
+        self.position = position
     }
 
     required init?(coder aDecoder: NSCoder) {
