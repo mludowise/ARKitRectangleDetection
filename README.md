@@ -2,7 +2,7 @@
 
 This project demonstrates how to use Apple's Vision library to identify rectangles and model them in 3D using ARKit.
 
-[![View Demo](https://img.youtube.com/vi/57rLJlsp8YM/0.jpg)](https://youtu.be/57rLJlsp8YM)
+[![View Demo](screenshot.png)](https://youtu.be/57rLJlsp8YM)
 
 [🎦 View Demo on YouTube](https://youtu.be/57rLJlsp8YM)
 

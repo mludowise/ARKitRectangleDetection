@@ -25,6 +25,8 @@
 /* Begin PBXFileReference section */
 		A007122C1F36568B00D192A6 /* PlaneRectangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaneRectangle.swift; sourceTree = "<group>"; };
 		A00712341F379F4800D192A6 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		A007123A1F38106500D192A6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		A007123B1F38108100D192A6 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
 		A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extensions.swift"; sourceTree = "<group>"; };
 		A066058A1F351E7000BF2012 /* UIView+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extensions.swift"; sourceTree = "<group>"; };
 		A066058C1F35258700BF2012 /* ARHitTestResult+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ARHitTestResult+Extensions.swift"; sourceTree = "<group>"; };
@@ -74,6 +76,8 @@
 		A0E91F3B1F341E3800B511F8 = {
 			isa = PBXGroup;
 			children = (
+				A007123A1F38106500D192A6 /* README.md */,
+				A007123B1F38108100D192A6 /* screenshot.png */,
 				A0E91F461F341E3800B511F8 /* ARKitRectangleDetection */,
 				A0E91F451F341E3800B511F8 /* Products */,
 			);
