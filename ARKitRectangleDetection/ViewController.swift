@@ -18,6 +18,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     @IBOutlet var sceneView: ARSCNView!
     @IBOutlet weak var messageLabel: UILabel!
     @IBOutlet weak var messageView: UIView!
+    @IBOutlet weak var clearButton: UIButton!
+    @IBOutlet weak var restartButton: UIButton!
     
     
     // MARK: - Internal properties used to identify the rectangle the user is selecting
@@ -46,6 +48,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     // Used to lookup SurfaceNodes by planeAnchor and update them
     private var surfaceNodes = [ARPlaneAnchor:SurfaceNode]()
     
+    // MARK: - Debug properties
+    
+    var showDebugOptions = true
+    
     
     // MARK: - Message displayed to the user
     
@@ -63,11 +69,6 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
             }
         }
     }
-    
-    
-    // MARK: - Debug properties
-    
-    var showDebugOptions = true
     
     
     // MARK: - UIViewController
@@ -95,6 +96,10 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Don't display message
         message = nil
+        
+        // Style clear button
+        styleButton(clearButton, localizedTitle: NSLocalizedString("Clear", comment: ""))
+        styleButton(restartButton, localizedTitle: NSLocalizedString("Restart", comment: ""))
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -156,6 +161,29 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Create a planeRect and add a RectangleNode
         addPlaneRect(for: selectedRect)
+    }
+    
+    // MARK: - IBOutlets
+    
+    @IBAction func onClearButton(_ sender: Any) {
+        rectangleNodes.forEach({ $1.removeFromParentNode() })
+        rectangleNodes.removeAll()
+    }
+    
+    @IBAction func onRestartButton(_ sender: Any) {
+        // Remove all rectangles
+        rectangleNodes.forEach({ $1.removeFromParentNode() })
+        rectangleNodes.removeAll()
+        
+        // Remove all surfaces and tell session to forget about anchors
+        surfaceNodes.forEach { (anchor, surfaceNode) in
+            sceneView.session.remove(anchor: anchor)
+            surfaceNode.removeFromParentNode()
+        }
+        surfaceNodes.removeAll()
+        
+        // Update message
+        message = .helpFindSurface
     }
     
     // MARK: - ARSessionDelegate
@@ -318,5 +346,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         layer.path = path.cgPath
         return layer
+    }
+    
+    private func styleButton(_ button: UIButton, localizedTitle: String?) {
+        button.layer.borderColor = UIColor.yellow.cgColor
+        button.layer.borderWidth = 1
+        button.layer.cornerRadius = 4
+        button.setTitle(localizedTitle, for: .normal)
     }
 }

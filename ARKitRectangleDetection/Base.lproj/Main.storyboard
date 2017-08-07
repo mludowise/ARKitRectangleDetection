@@ -22,10 +22,10 @@
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             </arscnView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Wcr-4o-ghG">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="38"/>
+                                <rect key="frame" x="0.0" y="614" width="375" height="53"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This is a message." textAlignment="center" lineBreakMode="wordWrap" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZBl-Tv-UYE">
-                                        <rect key="frame" x="8" y="9" width="359" height="21"/>
+                                        <rect key="frame" x="16" y="16" width="343" height="21"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <nil key="highlightedColor"/>
@@ -33,24 +33,51 @@
                                 </subviews>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
                                 <constraints>
-                                    <constraint firstAttribute="bottom" secondItem="ZBl-Tv-UYE" secondAttribute="bottom" constant="8" id="0sH-z9-ayt"/>
-                                    <constraint firstItem="ZBl-Tv-UYE" firstAttribute="leading" secondItem="Wcr-4o-ghG" secondAttribute="leading" constant="8" id="Idc-17-aqy"/>
-                                    <constraint firstAttribute="trailing" secondItem="ZBl-Tv-UYE" secondAttribute="trailing" constant="8" id="KZD-Ei-GAE"/>
-                                    <constraint firstItem="ZBl-Tv-UYE" firstAttribute="top" secondItem="Wcr-4o-ghG" secondAttribute="top" constant="9" id="UBc-5R-gMa"/>
+                                    <constraint firstAttribute="trailing" secondItem="ZBl-Tv-UYE" secondAttribute="trailing" constant="16" id="8J5-K5-Cb3"/>
+                                    <constraint firstItem="ZBl-Tv-UYE" firstAttribute="top" secondItem="Wcr-4o-ghG" secondAttribute="top" constant="16" id="Q7F-ru-upY"/>
+                                    <constraint firstAttribute="bottom" secondItem="ZBl-Tv-UYE" secondAttribute="bottom" constant="16" id="bE0-qi-rmB"/>
+                                    <constraint firstItem="ZBl-Tv-UYE" firstAttribute="leading" secondItem="Wcr-4o-ghG" secondAttribute="leading" constant="16" id="sXx-WH-OCR"/>
                                 </constraints>
                             </view>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6YM-9t-ZZe">
+                                <rect key="frame" x="307" y="20" width="52" height="34"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
+                                <inset key="contentEdgeInsets" minX="8" minY="8" maxX="8" maxY="8"/>
+                                <state key="normal" title="Clear">
+                                    <color key="titleColor" red="1" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="onClearButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="rVi-Uz-33i"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6OC-Jo-UXh">
+                                <rect key="frame" x="16" y="19" width="66" height="34"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.5" colorSpace="calibratedRGB"/>
+                                <inset key="contentEdgeInsets" minX="8" minY="8" maxX="8" maxY="8"/>
+                                <state key="normal" title="Restart">
+                                    <color key="titleColor" red="1" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="onClearButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="Ldc-g7-2Lf"/>
+                                    <action selector="onRestartButton:" destination="MOP-cd-TFu" eventType="touchUpInside" id="fWz-OW-emi"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="Wcr-4o-ghG" firstAttribute="top" secondItem="PbY-Rf-lZl" secondAttribute="top" id="R74-MY-Wbj"/>
+                            <constraint firstItem="Wcr-4o-ghG" firstAttribute="bottom" secondItem="zmo-nJ-q2Z" secondAttribute="bottom" id="8dc-QZ-K3W"/>
                             <constraint firstItem="Wcr-4o-ghG" firstAttribute="trailing" secondItem="zmo-nJ-q2Z" secondAttribute="trailing" id="TIK-VO-ejK"/>
                             <constraint firstItem="Wcr-4o-ghG" firstAttribute="leading" secondItem="zmo-nJ-q2Z" secondAttribute="leading" id="le0-HY-pWl"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="zmo-nJ-q2Z"/>
                     </view>
                     <connections>
+                        <outlet property="clearButton" destination="6YM-9t-ZZe" id="aKc-OP-hCE"/>
                         <outlet property="messageLabel" destination="ZBl-Tv-UYE" id="vD6-Ss-dis"/>
                         <outlet property="messageView" destination="Wcr-4o-ghG" id="SXn-dX-OUd"/>
+                        <outlet property="restartButton" destination="6OC-Jo-UXh" id="i4T-mH-NRY"/>
                         <outlet property="sceneView" destination="FZG-Hr-Hoc" id="oS8-Am-0ul"/>
                     </connections>
                 </viewController>
