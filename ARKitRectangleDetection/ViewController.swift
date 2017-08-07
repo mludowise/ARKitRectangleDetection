@@ -51,7 +51,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     private var message: Message? {
         didSet {
-            showMessage(message)
+            DispatchQueue.main.async {
+                if let message = self.message {
+                    self.messageView.isHidden = false
+                    self.messageLabel.text = message.localizedString
+                    self.messageLabel.numberOfLines = 0
+                    self.messageLabel.sizeToFit()
+                } else {
+                    self.messageView.isHidden = true
+                }
+            }
         }
     }
     
@@ -83,6 +92,9 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         // Create a new scene
         let scene = SCNScene()
         sceneView.scene = scene
+        
+        // Don't display message
+        message = nil
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -97,7 +109,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Tell user to find the a surface if we don't know of any
         if surfaceNodes.isEmpty {
-            showMessage(.helpFindSurface)
+            message = .helpFindSurface
         }
     }
     
@@ -116,6 +128,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         currTouchLocation = touch.location(in: sceneView)
         findRectangle(locationInScene: currTouchLocation!, frame: currentFrame)
+        message = .helpTapReleaseRect
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -135,7 +148,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         currTouchLocation = nil
-        
+        message = .helpTapHoldRect
+
         guard let selectedRect = selectedRectangleObservation else {
             return
         }
@@ -176,7 +190,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         node.addChildNode(surface)
         
         if message == .helpFindSurface {
-            showMessage(.helpTapRect)
+            message = .helpTapHoldRect
         }
     }
     
@@ -223,6 +237,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     guard let observations = request.results as? [VNRectangleObservation],
                         let _ = observations.first else {
                             print ("No results")
+                            self.message = .errNoRect
                             return
                     }
                     
@@ -239,6 +254,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                         let convertedRect = self.sceneView.convertFromCamera(result.boundingBox)
                         return convertedRect.contains(location)
                     }).first else {
+                        print("No results at touch location")
+                        self.message = .errNoRect
                         return
                     }
                     
@@ -248,9 +265,16 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
                     self.selectedRectangleOutlineLayer = self.drawPolygon(convertedPoints, color: UIColor.red)
                     self.sceneView.layer.addSublayer(self.selectedRectangleOutlineLayer!)
                     
-                    // Do stuff with the observed rectangle
+                    // Track the selected rectangle and when it was found
                     self.selectedRectangleObservation = selectedRect
                     self.selectedRectangleLastUpdated = Date()
+                    
+                    // Check if the user stopped touching the screen while we were in the background.
+                    // If so, then we should add the planeRect here instead of waiting for touches to end.
+                    if self.currTouchLocation == nil {
+                        // Create a planeRect and add a RectangleNode
+                        self.addPlaneRect(for: selectedRect)
+                    }
                 }
             })
             
@@ -273,6 +297,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         // Convert to 3D coordinates
         guard let planeRectangle = PlaneRectangle(for: observedRect, in: sceneView) else {
             print("No plane for this rectangle")
+            message = .errNoPlaneForRect
             return
         }
         
@@ -293,16 +318,5 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
         layer.path = path.cgPath
         return layer
-    }
-    
-    private func showMessage(_ message: Message?) {
-        if let message = message {
-            messageView.isHidden = false
-            messageLabel.text = message.localizedString
-            messageLabel.numberOfLines = 0
-            messageLabel.sizeToFit()
-        } else {
-            messageView.isHidden = true
-        }
     }
 }
