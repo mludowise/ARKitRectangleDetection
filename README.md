@@ -26,7 +26,7 @@ The `RectangleNode` class creates a `SCNPlane` from dimensions calculated in `Pl
 It's worth noting that the rectangle's position and dimensions can only be calculated if ARKit has found a horizontal plane underneath the rectangle and if at least 3 corners of the rectangle are on that plane.
 
 ## To Run
-1. Prerquisites: You must have a device running iOS 10 and XCode 9. Both of these are currently in beta but are available via the [Apple Developer portal](https://developer.apple.com/download/).
+1. Prerquisites: You must have a device running iOS 11 with an A9 or later processor and XCode 9. Both of these are currently in beta but are available via the [Apple Developer portal](https://developer.apple.com/download/).
 2. Download the source code for this project and open the project in XCode 9.
 3. Change the Bundle Identifier and Team to your own unique identifier and team. Note that this project does not require a developer license to run on a phone, so you can use a personal team.
 4. Run in XCode on your device.
