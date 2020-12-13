@@ -10,8 +10,10 @@
 		A007122D1F36568B00D192A6 /* PlaneRectangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A007122C1F36568B00D192A6 /* PlaneRectangle.swift */; };
 		A00712351F379F4800D192A6 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00712341F379F4800D192A6 /* Message.swift */; };
 		A04A97D91F34547100D93A39 /* SCNVector3+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */; };
-		A066058B1F351E7000BF2012 /* UIView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A066058A1F351E7000BF2012 /* UIView+Extensions.swift */; };
+		A04FE969258596F600DAC214 /* ARFrame+Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04FE968258596F600DAC214 /* ARFrame+Transform.swift */; };
 		A066058D1F35258700BF2012 /* ARHitTestResult+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A066058C1F35258700BF2012 /* ARHitTestResult+Extensions.swift */; };
+		A0AC6DF12574A96A002456B6 /* DeviceOrientation+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AC6DF02574A969002456B6 /* DeviceOrientation+Extensions.swift */; };
+		A0AC6DF42574B0B4002456B6 /* UIView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AC6DF32574B0B4002456B6 /* UIView+Extensions.swift */; };
 		A0E91F481F341E3800B511F8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F471F341E3800B511F8 /* AppDelegate.swift */; };
 		A0E91F4C1F341E3800B511F8 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0E91F4B1F341E3800B511F8 /* ViewController.swift */; };
 		A0E91F4F1F341E3800B511F8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A0E91F4D1F341E3800B511F8 /* Main.storyboard */; };
@@ -28,8 +30,10 @@
 		A007123A1F38106500D192A6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A007123B1F38108100D192A6 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
 		A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extensions.swift"; sourceTree = "<group>"; };
-		A066058A1F351E7000BF2012 /* UIView+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extensions.swift"; sourceTree = "<group>"; };
+		A04FE968258596F600DAC214 /* ARFrame+Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ARFrame+Transform.swift"; sourceTree = "<group>"; };
 		A066058C1F35258700BF2012 /* ARHitTestResult+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ARHitTestResult+Extensions.swift"; sourceTree = "<group>"; };
+		A0AC6DF02574A969002456B6 /* DeviceOrientation+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DeviceOrientation+Extensions.swift"; sourceTree = "<group>"; };
+		A0AC6DF32574B0B4002456B6 /* UIView+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+Extensions.swift"; sourceTree = "<group>"; };
 		A0E91F441F341E3800B511F8 /* ARKitRectangleDetection.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ARKitRectangleDetection.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0E91F471F341E3800B511F8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A0E91F4B1F341E3800B511F8 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -56,10 +60,12 @@
 		A007122E1F3668A500D192A6 /* Extensions + Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				A0AC6DF32574B0B4002456B6 /* UIView+Extensions.swift */,
 				A0E91F5E1F34256700B511F8 /* Collection+Extensions.swift */,
-				A066058A1F351E7000BF2012 /* UIView+Extensions.swift */,
 				A04A97D81F34547100D93A39 /* SCNVector3+Extensions.swift */,
 				A066058C1F35258700BF2012 /* ARHitTestResult+Extensions.swift */,
+				A0AC6DF02574A969002456B6 /* DeviceOrientation+Extensions.swift */,
+				A04FE968258596F600DAC214 /* ARFrame+Transform.swift */,
 			);
 			path = "Extensions + Utilities";
 			sourceTree = "<group>";
@@ -81,7 +87,9 @@
 				A0E91F461F341E3800B511F8 /* ARKitRectangleDetection */,
 				A0E91F451F341E3800B511F8 /* Products */,
 			);
+			indentWidth = 4;
 			sourceTree = "<group>";
+			tabWidth = 4;
 		};
 		A0E91F451F341E3800B511F8 /* Products */ = {
 			isa = PBXGroup;
@@ -135,11 +143,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0900;
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 1220;
 				ORGANIZATIONNAME = "Mel Ludowise";
 				TargetAttributes = {
 					A0E91F431F341E3800B511F8 = {
 						CreatedOnToolsVersion = 9.0;
+						LastSwiftMigration = 1220;
 					};
 				};
 			};
@@ -179,6 +188,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0AC6DF12574A96A002456B6 /* DeviceOrientation+Extensions.swift in Sources */,
 				A0E91F4C1F341E3800B511F8 /* ViewController.swift in Sources */,
 				A04A97D91F34547100D93A39 /* SCNVector3+Extensions.swift in Sources */,
 				A066058D1F35258700BF2012 /* ARHitTestResult+Extensions.swift in Sources */,
@@ -187,8 +197,9 @@
 				A00712351F379F4800D192A6 /* Message.swift in Sources */,
 				A0E91F5D1F341EFA00B511F8 /* SurfaceNode.swift in Sources */,
 				A0E91F481F341E3800B511F8 /* AppDelegate.swift in Sources */,
-				A066058B1F351E7000BF2012 /* UIView+Extensions.swift in Sources */,
 				A007122D1F36568B00D192A6 /* PlaneRectangle.swift in Sources */,
+				A0AC6DF42574B0B4002456B6 /* UIView+Extensions.swift in Sources */,
+				A04FE969258596F600DAC214 /* ARFrame+Transform.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,6 +239,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -235,8 +247,10 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -262,7 +276,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -285,6 +299,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -292,8 +307,10 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -313,7 +330,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -330,7 +347,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.melludowise.ARKitRectangleDetection;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -344,7 +361,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.melludowise.ARKitRectangleDetection;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

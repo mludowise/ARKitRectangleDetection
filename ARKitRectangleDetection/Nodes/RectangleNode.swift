@@ -37,7 +37,7 @@ class RectangleNode: SCNNode {
         var transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1.0, 0.0, 0.0)
         
         // Set rotation to the corner of the rectangle
-        transform = SCNMatrix4Rotate(transform, orientation, 0, 1, 0)
+        transform = SCNMatrix4Rotate(transform, orientation, 0, 0, 1)
         
         rectNode.transform = transform
         

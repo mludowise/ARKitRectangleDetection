@@ -26,8 +26,10 @@ class PlaneRectangle: NSObject {
     
     // Creates a rectangleon 3D space based on a VNRectangleObservation found in a given ARSCNView
     // Returns nil if no plane can be found that contains the rectangle
-    init?(for rectangle: VNRectangleObservation, in sceneView: ARSCNView) {
-        guard let cornersAndAnchor = getCorners(for: rectangle, in: sceneView) else {
+    init?(for rectangle: VNRectangleObservation,
+          in sceneView: ARSCNView,
+          with transform: CGAffineTransform) {
+        guard let cornersAndAnchor = getCorners(for: rectangle, in: sceneView, with: transform) else {
             return nil
         }
         
@@ -62,14 +64,16 @@ fileprivate enum RectangleCorners {
 
 // Finds 3d vector points for the corners of a rectangle on a plane in a given scene
 // Returns 3 corners representing the rectangle as well as the anchor for its plane
-fileprivate func getCorners(for rectangle: VNRectangleObservation, in sceneView: ARSCNView) -> (corners: RectangleCorners, anchor: ARPlaneAnchor)? {
-    
+fileprivate func getCorners(for rectangle: VNRectangleObservation,
+                            in sceneView: ARSCNView,
+                            with transform: CGAffineTransform) -> (corners: RectangleCorners, anchor: ARPlaneAnchor)? {
+
     // Perform a hittest on each corner to find intersecting surfaces
-    let tl = sceneView.hitTest(sceneView.convertFromCamera(rectangle.topLeft), types: .existingPlaneUsingExtent)
-    let tr = sceneView.hitTest(sceneView.convertFromCamera(rectangle.topRight), types: .existingPlaneUsingExtent)
-    let bl = sceneView.hitTest(sceneView.convertFromCamera(rectangle.bottomLeft), types: .existingPlaneUsingExtent)
-    let br = sceneView.hitTest(sceneView.convertFromCamera(rectangle.bottomRight), types: .existingPlaneUsingExtent)
-    
+    let tl = sceneView.hitTest(rectangle.topLeft.applying(transform), types: .existingPlaneUsingExtent)
+    let tr = sceneView.hitTest(rectangle.topRight.applying(transform), types: .existingPlaneUsingExtent)
+    let bl = sceneView.hitTest(rectangle.bottomLeft.applying(transform), types: .existingPlaneUsingExtent)
+    let br = sceneView.hitTest(rectangle.bottomRight.applying(transform), types: .existingPlaneUsingExtent)
+
     print("tl: \(tl.count) tr: \(tr.count) br: \(br.count) bl: \(bl.count)")
     
     // Not all 4 corners will necessarily be found on the same plane,
